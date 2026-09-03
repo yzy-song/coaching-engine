@@ -14,7 +14,7 @@ export default async function VerifyQueuePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Verify queue</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Verify queue</h1>
         <p className="text-sm text-muted-foreground">
           The agent drafts with citations, then stops. Nothing routes until
           you confirm, correct or reject — and every verdict trains the
@@ -47,8 +47,8 @@ export default async function VerifyQueuePage() {
                   variant="outline"
                   className={
                     rec.classification === "policy"
-                      ? "border-rose-300 bg-rose-50 text-rose-700"
-                      : "border-sky-300 bg-sky-50 text-sky-700"
+                      ? "border-rose-400/30 bg-rose-500/10 text-rose-300"
+                      : "border-sky-400/30 bg-sky-500/10 text-sky-300"
                   }
                 >
                   {rec.classification}
@@ -78,7 +78,7 @@ export default async function VerifyQueuePage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
-                <CheckCircle2 className="size-5 text-emerald-600" />
+                <CheckCircle2 className="size-5 text-emerald-400" />
                 Queue clear
               </CardTitle>
             </CardHeader>

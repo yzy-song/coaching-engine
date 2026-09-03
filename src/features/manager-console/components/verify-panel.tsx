@@ -120,17 +120,17 @@ export function VerifyPanel({
             className={`rounded-xl border p-3 text-left transition-all ${
               verdict === v
                 ? v === "confirmed"
-                  ? "border-emerald-500 bg-emerald-50 ring-2 ring-emerald-200"
+                  ? "border-emerald-400 bg-emerald-500/10 ring-2 ring-emerald-400/20"
                   : v === "corrected"
-                    ? "border-amber-500 bg-amber-50 ring-2 ring-amber-200"
-                    : "border-rose-500 bg-rose-50 ring-2 ring-rose-200"
+                    ? "border-amber-400 bg-amber-500/10 ring-2 ring-amber-400/20"
+                    : "border-rose-400 bg-rose-500/10 ring-2 ring-rose-400/20"
                 : "bg-card hover:bg-muted/40"
             }`}
           >
             <span className="flex items-center gap-2 text-sm font-semibold">
-              {v === "confirmed" && <Check className="size-4 text-emerald-600" />}
-              {v === "corrected" && <RotateCcw className="size-4 text-amber-600" />}
-              {v === "rejected" && <X className="size-4 text-rose-600" />}
+              {v === "confirmed" && <Check className="size-4 text-emerald-300" />}
+              {v === "corrected" && <RotateCcw className="size-4 text-amber-300" />}
+              {v === "rejected" && <X className="size-4 text-rose-300" />}
               {verdictCopy[v].label}
             </span>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -218,19 +218,19 @@ function VerifyResultPanel({
       <div
         className={`flex items-center gap-3 rounded-xl border p-4 ${
           verdict === "confirmed"
-            ? "border-emerald-300 bg-emerald-50"
+            ? "border-emerald-400/40 bg-emerald-500/10"
             : verdict === "corrected"
-              ? "border-amber-300 bg-amber-50"
-              : "border-rose-300 bg-rose-50"
+              ? "border-amber-400/40 bg-amber-500/10"
+              : "border-rose-400/40 bg-rose-500/10"
         }`}
       >
         {verdict === "confirmed" && (
-          <Check className="size-6 text-emerald-600" />
+          <Check className="size-6 text-emerald-300" />
         )}
         {verdict === "corrected" && (
-          <RotateCcw className="size-6 text-amber-600" />
+          <RotateCcw className="size-6 text-amber-300" />
         )}
-        {verdict === "rejected" && <X className="size-6 text-rose-600" />}
+        {verdict === "rejected" && <X className="size-6 text-rose-300" />}
         <div>
           <p className="font-semibold">
             {verdict === "confirmed"
@@ -249,18 +249,18 @@ function VerifyResultPanel({
       <CalibrationShift data={data} />
 
       {data.escalation && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 p-4">
+        <div className="rounded-xl border border-rose-400/40 bg-rose-500/10 p-4">
           <div className="flex items-center gap-2">
-            <ShieldAlert className="size-5 text-rose-600" />
-            <p className="text-sm font-semibold text-rose-800">
+            <ShieldAlert className="size-5 text-rose-300" />
+            <p className="text-sm font-semibold text-rose-200">
               Escalated — {data.escalation.route.toUpperCase()} · rule{" "}
               {data.escalation.rule_id}
             </p>
-            <Badge variant="outline" className="ml-auto border-rose-300 text-rose-700">
+            <Badge variant="outline" className="ml-auto border-rose-400/40 text-rose-300">
               severity {data.escalation.severity}
             </Badge>
           </div>
-          <p className="mt-2 text-sm text-rose-900/80">
+          <p className="mt-2 text-sm text-rose-200/80">
             {data.escalation.summary}
           </p>
         </div>

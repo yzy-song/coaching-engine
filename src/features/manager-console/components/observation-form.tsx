@@ -89,8 +89,8 @@ export function ObservationForm({ staff }: { staff: StaffMember[] }) {
   if (unlocked) {
     return (
       <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border bg-card p-10 text-center">
-        <div className="flex size-16 items-center justify-center rounded-full bg-emerald-100">
-          <LockOpen className="size-8 text-emerald-600" />
+        <div className="flex size-16 items-center justify-center rounded-full bg-emerald-500/15">
+          <LockOpen className="size-8 text-emerald-300" />
         </div>
         <div>
           <h2 className="text-xl font-semibold">
@@ -107,7 +107,7 @@ export function ObservationForm({ staff }: { staff: StaffMember[] }) {
           drafted with citations
         </div>
         <div className="flex gap-1.5">
-          <Lock className="size-4 animate-pulse text-emerald-600" />
+          <Lock className="size-4 animate-pulse text-emerald-300" />
           <span className="text-xs text-muted-foreground">
             Taking you to the gap…
           </span>

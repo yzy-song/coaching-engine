@@ -21,24 +21,24 @@ const quadrantOrder = [
 
 const toneClasses: Record<string, { chip: string; ring: string; text: string }> = {
   emerald: {
-    chip: "bg-emerald-100 text-emerald-800 border-emerald-200",
-    ring: "ring-emerald-500",
-    text: "text-emerald-700",
+    chip: "bg-emerald-500/15 text-emerald-300 border-emerald-400/30",
+    ring: "ring-emerald-400",
+    text: "text-emerald-300",
   },
   amber: {
-    chip: "bg-amber-100 text-amber-800 border-amber-200",
-    ring: "ring-amber-500",
-    text: "text-amber-700",
+    chip: "bg-amber-500/15 text-amber-200 border-amber-400/30",
+    ring: "ring-amber-400",
+    text: "text-amber-300",
   },
   rose: {
-    chip: "bg-rose-100 text-rose-800 border-rose-200",
-    ring: "ring-rose-500",
-    text: "text-rose-700",
+    chip: "bg-rose-500/15 text-rose-300 border-rose-400/30",
+    ring: "ring-rose-400",
+    text: "text-rose-300",
   },
   violet: {
-    chip: "bg-violet-100 text-violet-800 border-violet-200",
-    ring: "ring-violet-500",
-    text: "text-violet-700",
+    chip: "bg-violet-500/15 text-violet-300 border-violet-400/30",
+    ring: "ring-violet-400",
+    text: "text-violet-300",
   },
 };
 
@@ -152,7 +152,7 @@ export function GapQuadrant({
                 <div className="ml-auto flex items-center gap-1 text-muted-foreground">
                   <TrendingUp className="size-3.5" />
                   {active.trend.map((t) => t.gap).join(" → ")}
-                  <ArrowUpRight className="size-3.5 text-rose-500" />
+                  <ArrowUpRight className="size-3.5 text-rose-400" />
                 </div>
               </div>
             </div>

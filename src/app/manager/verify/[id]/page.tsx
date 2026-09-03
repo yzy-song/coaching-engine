@@ -38,7 +38,7 @@ export default async function VerifyDetailPage(
             .join("")}
         </div>
         <div>
-          <h1 className="text-xl font-semibold">{staff?.name}</h1>
+          <h1 className="text-xl font-semibold tracking-tight">{staff?.name}</h1>
           <p className="text-xs text-muted-foreground">
             {staff?.role} · {staff?.department} · {staff?.started_at}
           </p>

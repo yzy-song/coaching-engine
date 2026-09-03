@@ -37,8 +37,8 @@ export function DebriefEntry() {
       <div className="space-y-4">
         <div className="rounded-2xl border bg-card p-4">
           <div className="flex items-center gap-2">
-            <div className="flex size-8 items-center justify-center rounded-full bg-emerald-100">
-              <Sparkles className="size-4 text-emerald-700" />
+            <div className="flex size-8 items-center justify-center rounded-full bg-emerald-500/15">
+              <Sparkles className="size-4 text-emerald-300" />
             </div>
             <p className="text-sm font-semibold">
               Your hotel's own standard — straight after your shift
@@ -67,7 +67,7 @@ export function DebriefEntry() {
         {result.generated_scenario_id && (
           <Link
             href={`/staff/practice/${result.generated_scenario_id}`}
-            className="flex items-center justify-between rounded-2xl bg-primary p-4 text-primary-foreground"
+            className="flex items-center justify-between rounded-2xl bg-primary p-4 text-primary-foreground shadow-[0_8px_30px_-12px_var(--primary)]"
           >
             <div>
               <p className="text-sm font-semibold">

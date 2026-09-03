@@ -12,7 +12,7 @@ export default async function PracticeListPage() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-lg font-semibold">Practice</h1>
+        <h1 className="text-lg font-semibold tracking-tight">Practice</h1>
         <p className="text-xs text-muted-foreground">
           3 minutes each. Scored once at the end — with the exact words that
           earned each score.
@@ -23,7 +23,7 @@ export default async function PracticeListPage() {
         <Link
           key={scenario.id}
           href={`/staff/practice/${scenario.id}`}
-          className="block rounded-2xl bg-primary p-4 text-primary-foreground"
+          className="block rounded-2xl bg-primary p-4 text-primary-foreground shadow-[0_8px_30px_-12px_var(--primary)]"
         >
           <div className="flex items-center gap-2">
             <Sparkles className="size-4" />

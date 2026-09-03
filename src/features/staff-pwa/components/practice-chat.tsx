@@ -22,9 +22,9 @@ const moodLabel: Record<string, string> = {
 
 const moodTone: Record<string, string> = {
   neutral: "bg-muted text-muted-foreground",
-  frustrated: "bg-amber-100 text-amber-800",
-  escalating: "bg-rose-100 text-rose-800",
-  calming: "bg-emerald-100 text-emerald-800",
+  frustrated: "bg-amber-500/15 text-amber-200",
+  escalating: "bg-rose-500/15 text-rose-300",
+  calming: "bg-emerald-500/15 text-emerald-300",
 };
 
 const moodShiftNote: Record<string, string> = {
@@ -245,7 +245,7 @@ export function PracticeChat({
           )}
         </div>
         {sendFailed && (
-          <p className="text-xs text-rose-600">
+          <p className="text-xs text-rose-400">
             Couldn't send that message — please try again.
           </p>
         )}
@@ -279,7 +279,7 @@ export function PracticeChat({
 
 function GuestAvatar() {
   return (
-    <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-sm font-bold text-amber-800 ring-2 ring-amber-200">
+    <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-sm font-bold text-amber-800 ring-2 ring-amber-200 dark:bg-amber-500/15 dark:text-amber-200 dark:ring-amber-400/30">
       G
     </div>
   );
@@ -308,7 +308,7 @@ function GuestRow({ content, mood }: { content: string; mood: string }) {
 function StaffRow({ content }: { content: string }) {
   return (
     <div className="flex msg-in justify-end">
-      <div className="max-w-[78%] rounded-2xl rounded-br-sm bg-primary px-4 py-2.5 text-sm text-primary-foreground">
+      <div className="max-w-[78%] rounded-2xl rounded-br-sm bg-primary px-4 py-2.5 text-sm text-primary-foreground shadow-[0_4px_20px_-8px_var(--primary)]">
         {content}
       </div>
     </div>

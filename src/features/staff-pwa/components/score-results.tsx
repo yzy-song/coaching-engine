@@ -37,10 +37,10 @@ export function ScoreResults({ result }: { result: ScoreResult }) {
                   level === null
                     ? "bg-muted text-muted-foreground"
                     : level >= 4
-                      ? "bg-emerald-100 text-emerald-800"
+                      ? "bg-emerald-500/15 text-emerald-300"
                       : level === 3
-                        ? "bg-amber-100 text-amber-800"
-                        : "bg-rose-100 text-rose-800"
+                        ? "bg-amber-500/15 text-amber-200"
+                        : "bg-rose-500/15 text-rose-300"
                 }`}
               >
                 {level ?? "—"}

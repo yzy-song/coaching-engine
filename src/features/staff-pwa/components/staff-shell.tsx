@@ -15,7 +15,7 @@ export function StaffShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-dvh justify-center bg-muted/40">
-      <div className="relative flex min-h-dvh w-full max-w-md flex-col bg-background shadow-2xl">
+      <div className="relative flex min-h-dvh w-full max-w-md flex-col bg-background shadow-2xl ring-1 ring-border">
         <header className="flex items-center gap-3 border-b px-4 py-3.5">
           <div className="flex size-9 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
             DA
@@ -26,7 +26,7 @@ export function StaffShell({ children }: { children: React.ReactNode }) {
               Front Desk · The Meridian
             </p>
           </div>
-          <div className="ml-auto flex size-8 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">
+          <div className="ml-auto flex size-8 items-center justify-center rounded-full bg-emerald-500/15 text-xs font-bold text-emerald-300 ring-1 ring-emerald-400/30">
             4.0
           </div>
         </header>

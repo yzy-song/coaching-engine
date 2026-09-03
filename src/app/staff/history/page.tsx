@@ -38,7 +38,7 @@ export default function HistoryPage() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-lg font-semibold">My scores</h1>
+        <h1 className="text-lg font-semibold tracking-tight">My scores</h1>
         <p className="text-xs text-muted-foreground">
           Everything here is everything your manager can see — no hidden
           records, ever.
@@ -60,10 +60,10 @@ export default function HistoryPage() {
                     level === null
                       ? "bg-muted text-muted-foreground"
                       : level >= 4
-                        ? "bg-emerald-100 text-emerald-800"
+                        ? "bg-emerald-500/15 text-emerald-300"
                         : level === 3
-                          ? "bg-amber-100 text-amber-800"
-                          : "bg-rose-100 text-rose-800"
+                          ? "bg-amber-500/15 text-amber-200"
+                          : "bg-rose-500/15 text-rose-300"
                   }`}
                 >
                   {dimensionShort[dimension]} · {level ?? "—"}

@@ -18,7 +18,7 @@ export default async function InsightsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Team insights</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Team insights</h1>
         <p className="text-sm text-muted-foreground">
           Patterns across the whole team, shown only when at least{" "}
           {insights.k_threshold} staff share them — so no individual can be
@@ -32,7 +32,7 @@ export default async function InsightsPage() {
           Window {insights.window.start} → {insights.window.end}
         </span>
         <span className="flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-muted-foreground">
-          <ShieldCheck className="size-3.5 text-emerald-600" />
+          <ShieldCheck className="size-3.5 text-emerald-400" />
           k-anonymity threshold: {insights.k_threshold}
         </span>
       </div>

@@ -8,7 +8,7 @@ export default function LandingPage() {
     <div className="flex min-h-dvh flex-col">
       <header className="border-b">
         <div className="mx-auto flex max-w-4xl items-center gap-2.5 px-4 py-4">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-primary text-sm font-bold text-primary-foreground">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-primary text-sm font-bold text-primary-foreground shadow-[0_0_18px_-6px_var(--primary)]">
             C
           </div>
           <div className="leading-tight">
@@ -30,7 +30,7 @@ export default function LandingPage() {
             <Sparkles className="size-3" />
             Demo build — seeded with the Diego story
           </Badge>
-          <h1 className="mt-4 text-3xl font-semibold leading-tight md:text-4xl">
+          <h1 className="mt-4 text-3xl font-semibold leading-tight tracking-tight md:text-4xl">
             Training shows completion.{" "}
             <span className="text-primary">
               This shows what changed on the floor.
@@ -46,7 +46,7 @@ export default function LandingPage() {
 
         <div className="mt-10 grid gap-4 sm:grid-cols-2">
           <Link href="/manager" className="group">
-            <Card className="h-full transition-all group-hover:-translate-y-0.5 group-hover:border-primary/40 group-hover:shadow-lg">
+            <Card className="h-full transition-all group-hover:-translate-y-0.5 group-hover:border-primary/40 group-hover:shadow-[0_16px_44px_-18px_var(--primary)]">
               <CardHeader>
                 <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10">
                   <MonitorSmartphone className="size-5 text-primary" />
@@ -67,7 +67,7 @@ export default function LandingPage() {
           </Link>
 
           <Link href="/staff" className="group">
-            <Card className="h-full transition-all group-hover:-translate-y-0.5 group-hover:border-primary/40 group-hover:shadow-lg">
+            <Card className="h-full transition-all group-hover:-translate-y-0.5 group-hover:border-primary/40 group-hover:shadow-[0_16px_44px_-18px_var(--primary)]">
               <CardHeader>
                 <div className="flex size-10 items-center justify-center rounded-xl bg-primary/10">
                   <Smartphone className="size-5 text-primary" />
