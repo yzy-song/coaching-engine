@@ -40,7 +40,9 @@ export default function LandingPage() {
             Staff practise AI-scored scenarios. Managers log 20-second floor
             observations. The agent combines both streams into a cited,
             checkable coaching recommendation — and holds it until a human
-            verifies it. Nothing routes on AI output alone.
+            verifies it. Nothing routes on AI output alone. Practice-only
+            training is where Cornell's AI hospitality research stops — we
+            close the loop on the floor.
           </p>
         </div>
 

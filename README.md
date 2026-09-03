@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# The Coaching Engine
 
-## Getting Started
+Frontline coaching that closes the gap between training and the floor.
 
-First, run the development server:
+TechIreland National AI Challenge 2026 — demo build.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## What it is
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Two apps, one loop:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Staff PWA** (`/staff`) — debrief your shift in your own words and get your
+  hotel's own standard back; practise 3-minute AI-scored scenarios; see exactly
+  what earned each score.
+- **Manager Console** (`/manager`) — log 20-second floor observations, read the
+  transfer gap between practice and the floor, verify the agent's cited
+  recommendations, and watch the calibration number move.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Demo path
 
-## Learn More
+1. `/` — landing, two role entries
+2. `/staff` — debrief ("the missing starter") → standard reference → personal scenario
+3. `/staff/practice/5e9d-personal` — chat with the guest (mood shifts)
+4. `/manager/observe` — log a floor observation for Diego
+5. `/manager/gap` — transfer-gap scatter + radar
+6. `/manager/verify/r91a-diego` — verify the recommendation → calibration moves
 
-To learn more about Next.js, take a look at the following resources:
+## Architecture notes
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Next.js 16 App Router. The mock API layer (`src/lib/mock`) sits behind the
+  same contracts the real AI integration will fill — citations
+  (`sop_chunk`, `attempt_turn`, `observation`) are the shape of future RAG
+  output.
+- Nothing routes on AI output alone: every recommendation waits for a human
+  verdict, and every verdict trains the calibration metric.
+- Team insights are k-anonymised; individual coaching is suppressed when the
+  root cause is process or policy.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Related work
 
-## Deploy on Vercel
+[Cornell's AI-powered hospitality training](https://innovationhub.ai.cornell.edu/articles/training-the-next-generation-of-hotel-staff-an-ai-powered-approach-to-hospitality-education/)
+(Info 5940, Fall 2025, with the Statler Hotel) built guest/coach/report agents
+grounded in hotel SOPs — practice simulation only, no evaluation data.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This demo extends that direction: floor observations, a transfer-gap radar,
+mandatory human verification, and a calibration metric that moves with every
+verdict.
