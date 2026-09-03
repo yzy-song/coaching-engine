@@ -1,0 +1,60 @@
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { notFound } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { RecommendationCard } from "@/features/manager-console/components/recommendation-card";
+import { VerifyPanel } from "@/features/manager-console/components/verify-panel";
+import { managerApi } from "@/features/manager-console/api/managerApi";
+import { staffMembers } from "@/lib/mock/seed";
+
+export const metadata = { title: "Verify — Manager Console" };
+
+export default async function VerifyDetailPage(
+  props: PageProps<"/manager/verify/[id]">
+) {
+  const { id } = await props.params;
+  const recommendation = await managerApi.getRecommendation(id);
+  if (!recommendation) notFound();
+
+  const staff = staffMembers.find((s) => s.id === recommendation.staff_id);
+
+  return (
+    <div className="space-y-6">
+      <Button
+        variant="ghost"
+        size="sm"
+        className="-ml-2"
+        nativeButton={false} render={<Link href="/manager/verify" />}
+      >
+        <ArrowLeft className="size-4" />
+        Back to queue
+      </Button>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex size-10 items-center justify-center rounded-full bg-accent text-sm font-bold text-accent-foreground">
+          {staff?.name
+            .split(" ")
+            .map((p) => p[0])
+            .join("")}
+        </div>
+        <div>
+          <h1 className="text-xl font-semibold">{staff?.name}</h1>
+          <p className="text-xs text-muted-foreground">
+            {staff?.role} · {staff?.department} · {staff?.started_at}
+          </p>
+        </div>
+      </div>
+
+      <RecommendationCard recommendation={recommendation} />
+
+      {recommendation.status === "pending_verify" ? (
+        <VerifyPanel recommendation={recommendation} />
+      ) : (
+        <p className="rounded-xl border bg-muted/30 p-4 text-center text-sm text-muted-foreground">
+          This recommendation was {recommendation.status}. Refresh the queue
+          to see the latest state.
+        </p>
+      )}
+    </div>
+  );
+}
