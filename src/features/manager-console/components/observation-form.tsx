@@ -44,9 +44,11 @@ export function ObservationForm({ staff }: { staff: StaffMember[] }) {
   const [submitting, setSubmitting] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
   const [result, setResult] = useState<{ recommendation_id: string } | null>(null);
-
-  const canSubmit =
-    staffId && whatHappened.trim().length > 0 && context.trim().length > 0;
+  const [errors, setErrors] = useState<{
+    context?: string;
+    whatHappened?: string;
+    ratings?: string;
+  }>({});
 
   useEffect(() => {
     if (!unlocked) return;
@@ -56,7 +58,41 @@ export function ObservationForm({ staff }: { staff: StaffMember[] }) {
     return () => window.clearTimeout(t);
   }, [unlocked, staffId, router]);
 
+  const validate = () => {
+    const next: typeof errors = {};
+    if (!context.trim()) {
+      next.context = "Describe the situation — e.g. where and what went wrong.";
+    }
+    if (!whatHappened.trim()) {
+      next.whatHappened = "Say what you saw the staff member do.";
+    }
+    const missing = RATED_DIMENSIONS.filter(
+      ({ dimension }) => ratings[dimension] === null
+    );
+    if (missing.length > 0) {
+      next.ratings =
+        missing.length === RATED_DIMENSIONS.length
+          ? "Rate all three behaviours — the transfer gap is computed from them."
+          : `Still to rate: ${missing
+              .map(({ dimension }) => observationDimensionLabels[dimension])
+              .join(", ")}.`;
+    }
+    return next;
+  };
+
   const handleSubmit = async () => {
+    if (submitting) return;
+    const next = validate();
+    if (next.context || next.whatHappened || next.ratings) {
+      setErrors(next);
+      toast.warning(
+        "A few fields are missing — the highlights below show what's needed."
+      );
+      if (next.context) document.getElementById("context")?.focus();
+      else if (next.whatHappened) document.getElementById("what")?.focus();
+      return;
+    }
+    setErrors({});
     setSubmitting(true);
     try {
       const res = await fetch("/api/v1/observations", {
@@ -145,18 +181,37 @@ export function ObservationForm({ staff }: { staff: StaffMember[] }) {
             id="context"
             placeholder="Guest complaint at front desk, room not ready at 3pm"
             value={context}
-            onChange={(e) => setContext(e.target.value)}
+            onChange={(e) => {
+              setContext(e.target.value);
+              if (errors.context && e.target.value.trim()) {
+                setErrors((er) => ({ ...er, context: undefined }));
+              }
+            }}
+            className={errors.context ? "border-rose-400/60 focus-visible:ring-rose-400/40" : ""}
           />
+          {errors.context && (
+            <p className="text-xs text-rose-300">{errors.context}</p>
+          )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="what">What happened</Label>
           <Textarea
             id="what"
             placeholder="Froze and escalated to me immediately…"
-            className="min-h-[68px]"
+            className={`min-h-[68px] ${
+              errors.whatHappened ? "border-rose-400/60 focus-visible:ring-rose-400/40" : ""
+            }`}
             value={whatHappened}
-            onChange={(e) => setWhatHappened(e.target.value)}
+            onChange={(e) => {
+              setWhatHappened(e.target.value);
+              if (errors.whatHappened && e.target.value.trim()) {
+                setErrors((er) => ({ ...er, whatHappened: undefined }));
+              }
+            }}
           />
+          {errors.whatHappened && (
+            <p className="text-xs text-rose-300">{errors.whatHappened}</p>
+          )}
         </div>
       </div>
 
@@ -164,7 +219,11 @@ export function ObservationForm({ staff }: { staff: StaffMember[] }) {
         {RATED_DIMENSIONS.map(({ dimension, prompt }) => (
           <div
             key={dimension}
-            className="rounded-xl border bg-card p-4"
+            className={`rounded-xl border p-4 ${
+              errors.ratings && ratings[dimension] === null
+                ? "border-rose-400/60 bg-card"
+                : "bg-card"
+            }`}
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-sm font-medium">
@@ -177,9 +236,17 @@ export function ObservationForm({ staff }: { staff: StaffMember[] }) {
                 <button
                   key={level}
                   type="button"
-                  onClick={() =>
-                    setRatings((r) => ({ ...r, [dimension]: level }))
-                  }
+                  onClick={() => {
+                    const next = { ...ratings, [dimension]: level };
+                    setRatings(next);
+                    if (
+                      RATED_DIMENSIONS.every(
+                        ({ dimension: d }) => next[d] !== null
+                      )
+                    ) {
+                      setErrors((er) => ({ ...er, ratings: undefined }));
+                    }
+                  }}
                   className={`flex-1 rounded-lg border py-2.5 text-sm font-bold transition-colors ${
                     ratings[dimension] === level
                       ? "border-primary bg-primary text-primary-foreground"
@@ -192,13 +259,16 @@ export function ObservationForm({ staff }: { staff: StaffMember[] }) {
             </div>
           </div>
         ))}
+        {errors.ratings && (
+          <p className="text-xs text-rose-300">{errors.ratings}</p>
+        )}
       </div>
 
       <div className="flex flex-col items-center gap-2">
         <Button
           size="lg"
           className="w-full sm:w-auto sm:min-w-64"
-          disabled={!canSubmit || submitting}
+          disabled={submitting}
           onClick={handleSubmit}
         >
           {submitting ? "Logging…" : "Log observation"}

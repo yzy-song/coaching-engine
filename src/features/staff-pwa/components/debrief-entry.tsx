@@ -14,7 +14,11 @@ export function DebriefEntry() {
   const [result, setResult] = useState<Debrief | null>(null);
 
   const handleSubmit = async () => {
-    if (!text.trim()) return;
+    if (submitting) return;
+    if (!text.trim()) {
+      toast.warning("Tell me what happened first — a sentence is enough.");
+      return;
+    }
     setSubmitting(true);
     try {
       const res = await fetch("/api/v1/debriefs", {
@@ -103,12 +107,18 @@ export function DebriefEntry() {
         <div className="mt-3 flex items-center gap-2">
           <Button
             onClick={handleSubmit}
-            disabled={!text.trim() || submitting}
+            disabled={submitting}
             className="flex-1"
           >
             {submitting ? "Checking against your standard…" : "Get instant feedback"}
           </Button>
-          <Button variant="outline" size="icon" className="size-10 shrink-0" disabled>
+          <Button
+            variant="outline"
+            size="icon"
+            className="size-10 shrink-0"
+            disabled
+            title="Voice debrief coming soon"
+          >
             <Mic className="size-4" />
           </Button>
         </div>

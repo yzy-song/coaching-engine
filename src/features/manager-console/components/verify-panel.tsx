@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, RotateCcw, ShieldAlert, Timer, X } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, Check, RotateCcw, ShieldAlert, Timer, X } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -53,7 +54,15 @@ export function VerifyPanel({
   }, []);
 
   const handleSubmit = async () => {
-    if (!verdict) return;
+    if (submitting) return;
+    if (!verdict) {
+      toast.warning("Pick a verdict first — Confirm, Correct or Reject.");
+      return;
+    }
+    if (verdict === "corrected" && managerLevel === null) {
+      toast.warning("Pick the level you actually saw before submitting.");
+      return;
+    }
     setSubmitting(true);
     try {
       const res = await fetch(
@@ -188,11 +197,7 @@ export function VerifyPanel({
 
       <Button
         onClick={handleSubmit}
-        disabled={
-          !verdict ||
-          (verdict === "corrected" && managerLevel === null) ||
-          submitting
-        }
+        disabled={submitting}
         size="lg"
         className="w-full"
       >
@@ -265,6 +270,14 @@ function VerifyResultPanel({
           </p>
         </div>
       )}
+
+      <Link
+        href="/manager"
+        className="flex items-center justify-center gap-2 rounded-xl border p-3 text-sm font-medium text-primary transition-colors hover:bg-muted/40"
+      >
+        Back to dashboard — see the calibration move
+        <ArrowRight className="size-4" />
+      </Link>
     </div>
   );
 }
