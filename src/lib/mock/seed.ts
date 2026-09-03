@@ -143,6 +143,65 @@ export const completedAttempt: PracticeAttempt = {
   result: diegoScoreResult,
 };
 
+// ── Earlier practice history (staff PWA "My scores" list) ───────────────────
+
+const aug29Result: ScoreResult = {
+  attempt_id: "3f7b-aug29",
+  scenario_id: "s2-starter",
+  completed_at: "2026-08-29T16:40:00Z",
+  scores: [
+    { dimension: "anticipation", level: 3 },
+    { dimension: "communication", level: 3 },
+    { dimension: "empathy", level: 4 },
+  ],
+  evidence: [
+    {
+      dimension: "empathy",
+      quote: "Of course — it's your anniversary, this should have been handled before you sat down.",
+      turn_index: 3,
+      explains: "Specific Validation: acknowledges the occasion, though the recovery lands after the fact.",
+    },
+  ],
+  overall_feedback:
+    "You picked up on the occasion quickly. Next time, tie the acknowledgement to a concrete next step in the same breath.",
+};
+
+export const historyAug29Attempt: PracticeAttempt = {
+  id: "3f7b-aug29",
+  scenario_id: "s2-starter",
+  status: "completed",
+  turns: [],
+  result: aug29Result,
+};
+
+const aug26Result: ScoreResult = {
+  attempt_id: "4c8d-aug26",
+  scenario_id: "s3-starter",
+  completed_at: "2026-08-26T22:05:00Z",
+  scores: [
+    { dimension: "composure", level: 4 },
+    { dimension: "communication", level: 2 },
+  ],
+  evidence: [
+    {
+      dimension: "composure",
+      quote: "I'll be up in two minutes — I'd rather not discuss this over the phone.",
+      turn_index: 4,
+      explains: "Resolved: keeps calm and moves the conversation to a private channel instead of escalating at the door.",
+    },
+  ],
+  overall_feedback:
+    "Your tone stayed steady. The follow-through message to the room was terse — a warmer close would lift the communication score.",
+};
+
+export const historyAug26Attempt: PracticeAttempt = {
+  id: "4c8d-aug26",
+  scenario_id: "s3-starter",
+  status: "completed",
+  turns: [],
+  result: aug26Result,
+};
+
 // ── In-progress practice (what Diego opens in the demo) ─────────────────────
 
 export const inProgressAttempt: PracticeAttempt = {
@@ -458,11 +517,4 @@ export const diegoEscalation = {
   rule_id: "RC-POLICY-COHORT-3",
   summary:
     "Nine staff hit the same authority ambiguity this week. Routed to the GM as a policy gap, not nine coaching sessions.",
-};
-
-export const verifyCalibrationUpdate = {
-  dimension: "service_recovery" as const,
-  agreement_rate_before: 0.84,
-  agreement_rate_after: 0.846,
-  sample_size: 26,
 };

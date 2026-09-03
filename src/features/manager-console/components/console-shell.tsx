@@ -2,19 +2,39 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { BarChart3, ClipboardCheck, ListChecks, Sparkles, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const nav = [
   { href: "/manager", label: "Overview", icon: Sparkles },
   { href: "/manager/observe", label: "Log observation", icon: ClipboardCheck },
-  { href: "/manager/verify", label: "Verify queue", icon: ListChecks, badge: "3" },
+  { href: "/manager/verify", label: "Verify queue", icon: ListChecks, badge: true },
   { href: "/manager/gap", label: "Transfer gap", icon: BarChart3 },
   { href: "/manager/insights", label: "Team insights", icon: Users },
 ];
 
 export function ConsoleShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const [pending, setPending] = useState<number | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/v1/recommendations")
+      .then((res) => (res.ok ? res.json() : []))
+      .then(
+        (list: Array<{ status: string }>) => {
+          if (cancelled) return;
+          setPending(
+            list.filter((r) => r.status === "pending_verify").length
+          );
+        }
+      )
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname]);
 
   return (
     <div className="flex min-h-dvh">
@@ -46,9 +66,9 @@ export function ConsoleShell({ children }: { children: React.ReactNode }) {
               >
                 <item.icon className="size-4 shrink-0" />
                 <span className="flex-1">{item.label}</span>
-                {item.badge && (
+                {item.badge && pending !== null && pending > 0 && (
                   <Badge className="h-5 min-w-5 justify-center rounded-full px-1.5 text-[11px]">
-                    {item.badge}
+                    {pending}
                   </Badge>
                 )}
               </Link>
@@ -67,13 +87,19 @@ export function ConsoleShell({ children }: { children: React.ReactNode }) {
         <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 md:px-8 md:py-8">
           {children}
         </main>
-        <MobileNav pathname={pathname} />
+        <MobileNav pathname={pathname} pending={pending} />
       </div>
     </div>
   );
 }
 
-function MobileNav({ pathname }: { pathname: string }) {
+function MobileNav({
+  pathname,
+  pending,
+}: {
+  pathname: string;
+  pending: number | null;
+}) {
   return (
     <nav className="fixed inset-x-0 bottom-0 z-20 flex border-t bg-background/95 backdrop-blur md:hidden">
       {nav.map((item) => {
@@ -91,9 +117,9 @@ function MobileNav({ pathname }: { pathname: string }) {
           >
             <item.icon className="size-5" />
             {item.label.split(" ")[0]}
-            {item.badge && (
+            {item.badge && pending !== null && pending > 0 && (
               <span className="absolute right-1/4 top-1.5 flex size-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground">
-                {item.badge}
+                {pending}
               </span>
             )}
           </Link>

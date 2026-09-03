@@ -1,21 +1,18 @@
 import {
-  abstainedRecommendation,
   calibration,
-  ciaranRecommendation,
   completedAttempt,
   diegoDebrief,
   diegoEscalation,
   diegoGap,
   diegoObservation,
-  diegoRecommendation,
   diegoScoreResult,
-  emmaRecommendation,
+  historyAug26Attempt,
+  historyAug29Attempt,
   inProgressAttempt,
   recommendations,
   scenarios,
   staffMembers,
   teamInsights,
-  verifyCalibrationUpdate,
 } from "@/lib/mock/seed";
 import type {
   Calibration,
@@ -46,15 +43,12 @@ const store = {
   recommendations: [...recommendations] as Recommendation[],
   attempts: new Map<string, PracticeAttempt>([
     [completedAttempt.id, completedAttempt],
+    [historyAug29Attempt.id, historyAug29Attempt],
+    [historyAug26Attempt.id, historyAug26Attempt],
     [inProgressAttempt.id, inProgressAttempt],
   ]),
   calibration: calibration as Calibration,
-  verifiedIds: new Set<string>(),
 };
-
-function staffName(id: string): string {
-  return staffMembers.find((s) => s.id === id)?.name ?? "Unknown";
-}
 
 export const mockDb = {
   // GET /scenarios
@@ -187,7 +181,15 @@ export const mockDb = {
   // GET /staff/{id}/gap (Listing 6)
   async getGap(staffId: string): Promise<TransferGap | undefined> {
     await wait(400);
-    return staffId === "9f2c-diego" ? diegoGap : undefined;
+    if (!staffMembers.some((s) => s.id === staffId)) return undefined;
+    if (staffId === "9f2c-diego") return diegoGap;
+    // Demo mock: every selectable staff member has a readable gap so the
+    // post-observation redirect never dead-ends.
+    return {
+      ...diegoGap,
+      staff_id: staffId,
+      computed_at: new Date().toISOString(),
+    };
   },
 
   // GET /recommendations — the verify queue
@@ -210,29 +212,40 @@ export const mockDb = {
     const rec = store.recommendations.find((r) => r.id === id);
     if (!rec) throw new Error("Recommendation not found");
 
-    store.verifiedIds.add(id);
     store.recommendations = store.recommendations.map((r) =>
       r.id === id ? { ...r, status: input.verdict } : r
     );
 
-    const updated = {
+    const verdictDelta = {
+      confirmed: 0.006,
+      corrected: -0.003,
+      rejected: -0.006,
+    } as const;
+    const before = rec.calibration.agreement_rate;
+    const after = Math.round((before + verdictDelta[input.verdict]) * 1000) / 1000;
+    const sampleSize = rec.calibration.sample_size + 1;
+
+    store.calibration = {
       ...store.calibration,
       dimensions: store.calibration.dimensions.map((d) =>
-        d.dimension === verifyCalibrationUpdate.dimension
-          ? {
-              ...d,
-              agreement_rate: verifyCalibrationUpdate.agreement_rate_after,
-              sample_size: verifyCalibrationUpdate.sample_size,
-            }
+        d.dimension === rec.calibration.dimension
+          ? { ...d, agreement_rate: after, sample_size: sampleSize }
           : d
       ),
     };
-    store.calibration = updated;
 
     return {
       status: input.verdict,
-      calibration_updated: verifyCalibrationUpdate,
-      escalation: input.verdict === "confirmed" ? diegoEscalation : null,
+      calibration_updated: {
+        dimension: rec.calibration.dimension,
+        agreement_rate_before: before,
+        agreement_rate_after: after,
+        sample_size: sampleSize,
+      },
+      escalation:
+        input.verdict === "confirmed" && rec.classification === "policy"
+          ? diegoEscalation
+          : null,
     };
   },
 
@@ -247,14 +260,4 @@ export const mockDb = {
     await wait(400);
     return teamInsights;
   },
-
-  // Re-demo helpers
-  getStaffName: staffName,
-  getSeedRecommendations: () => [
-    diegoRecommendation,
-    abstainedRecommendation,
-    ciaranRecommendation,
-    emmaRecommendation,
-  ],
-  isVerified: (id: string) => store.verifiedIds.has(id),
 };

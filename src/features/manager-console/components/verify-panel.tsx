@@ -36,7 +36,7 @@ export function VerifyPanel({
 }) {
   const [seconds, setSeconds] = useState(0);
   const [verdict, setVerdict] = useState<Verdict | null>(null);
-  const [managerLevel, setManagerLevel] = useState(2);
+  const [managerLevel, setManagerLevel] = useState<number | null>(null);
   const [reason, setReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [response, setResponse] = useState<VerifyResponse | null>(null);
@@ -66,7 +66,7 @@ export function VerifyPanel({
             dimension_verdicts: [
               {
                 dimension: recommendation.calibration.dimension,
-                manager_level: managerLevel,
+                manager_level: managerLevel ?? 2,
               },
             ],
             reason,
@@ -105,11 +105,17 @@ export function VerifyPanel({
         </span>
       </div>
 
-      <div className="grid gap-2 sm:grid-cols-3">
+      <div
+        role="radiogroup"
+        aria-label="Your verdict"
+        className="grid gap-2 sm:grid-cols-3"
+      >
         {(Object.keys(verdictCopy) as Verdict[]).map((v) => (
           <button
             key={v}
             type="button"
+            role="radio"
+            aria-checked={verdict === v}
             onClick={() => setVerdict(v)}
             className={`rounded-xl border p-3 text-left transition-all ${
               verdict === v
@@ -139,11 +145,17 @@ export function VerifyPanel({
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Your level for {dimensionShort[recommendation.calibration.dimension]} on the floor
           </p>
-          <div className="mt-2 flex gap-2">
+          <div
+            role="radiogroup"
+            aria-label="Floor level"
+            className="mt-2 flex gap-2"
+          >
             {[1, 2, 3, 4, 5].map((level) => (
               <button
                 key={level}
                 type="button"
+                role="radio"
+                aria-checked={managerLevel === level}
                 onClick={() => setManagerLevel(level)}
                 className={`size-10 rounded-lg border text-sm font-bold transition-colors ${
                   managerLevel === level
@@ -155,6 +167,11 @@ export function VerifyPanel({
               </button>
             ))}
           </div>
+          {managerLevel === null && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Pick the level you actually saw before submitting.
+            </p>
+          )}
         </div>
       )}
 
@@ -171,7 +188,11 @@ export function VerifyPanel({
 
       <Button
         onClick={handleSubmit}
-        disabled={!verdict || submitting}
+        disabled={
+          !verdict ||
+          (verdict === "corrected" && managerLevel === null) ||
+          submitting
+        }
         size="lg"
         className="w-full"
       >
@@ -193,7 +214,7 @@ function VerifyResultPanel({
   data: VerifyResponse;
 }) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" aria-live="polite">
       <div
         className={`flex items-center gap-3 rounded-xl border p-4 ${
           verdict === "confirmed"
@@ -282,7 +303,10 @@ function CalibrationShift({ data }: { data: VerifyResponse }) {
         Manager agreement on{" "}
         {dimensionShort[data.calibration_updated.dimension]} — live
       </p>
-      <p className="mt-2 font-mono text-4xl font-bold tabular-nums text-primary">
+      <p
+        aria-live="off"
+        className="mt-2 font-mono text-4xl font-bold tabular-nums text-primary"
+      >
         {display.toFixed(3)}
       </p>
       <div className="mx-auto mt-3 h-2 max-w-xs overflow-hidden rounded-full bg-muted">

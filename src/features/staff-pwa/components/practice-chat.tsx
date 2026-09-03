@@ -65,7 +65,10 @@ export function PracticeChat({ attempt }: { attempt: PracticeAttempt }) {
     try {
       const res = await fetch(`/api/v1/attempts/${attempt.id}/turns`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Idempotency-Key": crypto.randomUUID(),
+        },
         body: JSON.stringify({ content }),
       });
       if (!res.ok) throw new Error("Turn failed");

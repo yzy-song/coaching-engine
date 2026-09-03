@@ -14,7 +14,7 @@ const history = [
   {
     date: "Aug 29",
     title: "The forgotten anniversary",
-    id: "8a4e-diego",
+    id: "3f7b-aug29",
     scores: [
       { dimension: "anticipation" as const, level: 3 },
       { dimension: "communication" as const, level: 3 },
@@ -25,7 +25,7 @@ const history = [
   {
     date: "Aug 26",
     title: "Noise complaint at midnight",
-    id: "8a4e-diego",
+    id: "4c8d-aug26",
     scores: [
       { dimension: "composure" as const, level: 4 },
       { dimension: "communication" as const, level: 2 },
