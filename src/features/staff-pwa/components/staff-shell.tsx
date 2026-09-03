@@ -31,7 +31,7 @@ export function StaffShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        <main className="flex-1 px-4 pb-24 pt-4">{children}</main>
+        <main className="flex flex-1 flex-col px-4 pb-24 pt-4">{children}</main>
 
         <nav className="fixed bottom-0 left-1/2 z-20 flex w-full max-w-md -translate-x-1/2 border-t bg-background/95 backdrop-blur">
           {tabs.map((tab) => {
