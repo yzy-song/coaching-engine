@@ -14,8 +14,9 @@
 2. `/staff` — debrief 框输入一段班次经历（可现场打字或直接讲 Diego 的
    「starter missing」故事）→ 酒店标准条款回来（「先道歉后补偿」）→
    点进去生成个性化场景。
-3. `/staff/practice/5e9d-personal` — 练习对话：说一句敷衍的回复，
-   让客人情绪升级 → 分隔线出现「getting more upset」。
+3. `/staff/practice/5e9d-personal` — 练习对话：说一句敷衍的回复（打字或按
+   麦克风语音输入，识别结果填入输入框确认后发出），让客人情绪升级 →
+   分隔线出现「getting more upset」。
 4. `/manager/observe` — 选 Diego，20 秒记一次现场观察（3 个评分）→
    自动跳到 gap 页。
 5. `/manager/gap` — 散点图：Recovery 4.0 练习 vs 2.0 现场 = BLOCKED
