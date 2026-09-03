@@ -109,6 +109,7 @@ export function PracticeChat({
   );
   const [listening, setListening] = useState(false);
   const recRef = useRef<SpeechRecognitionLike | null>(null);
+  const micStreamRef = useRef<MediaStream | null>(null);
   const baseInputRef = useRef("");
 
   useEffect(() => {
@@ -124,6 +125,7 @@ export function PracticeChat({
   useEffect(() => {
     return () => {
       recRef.current?.abort();
+      micStreamRef.current?.getTracks().forEach((t) => t.stop());
     };
   }, []);
 
@@ -131,10 +133,17 @@ export function PracticeChat({
     const rec = recRef.current;
     recRef.current = null;
     setListening(false);
+    micStreamRef.current?.getTracks().forEach((t) => t.stop());
+    micStreamRef.current = null;
     rec?.abort();
   };
 
-  const handleMic = () => {
+  const fillDemo = (message: string) => {
+    setInput((v) => (v.trim() ? `${v} ` : "") + DEMO_VOICE_LINE);
+    toast.info(message);
+  };
+
+  const handleMic = async () => {
     if (listening) {
       stopVoice();
       return;
@@ -142,10 +151,19 @@ export function PracticeChat({
     if (exhausted || completing) return;
     const rec = getSpeechRecognition();
     if (!rec) {
-      setInput((v) => (v.trim() ? `${v} ` : "") + DEMO_VOICE_LINE);
-      toast.info(
+      fillDemo(
         "Voice input isn't available in this browser — filled a demo reply instead."
       );
+      return;
+    }
+    // Ask for mic permission first: starting recognition before the grant
+    // fires a spurious "not-allowed" error in Chrome on first use.
+    try {
+      micStreamRef.current = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+      });
+    } catch {
+      fillDemo("Microphone access was denied — filled a demo reply instead.");
       return;
     }
     baseInputRef.current = input;
@@ -164,15 +182,22 @@ export function PracticeChat({
     rec.onend = () => {
       recRef.current = null;
       setListening(false);
+      micStreamRef.current?.getTracks().forEach((t) => t.stop());
+      micStreamRef.current = null;
     };
     rec.onerror = (e) => {
       if (recRef.current !== rec) return;
       recRef.current = null;
       setListening(false);
-      setInput((v) => (v.trim() ? `${v} ` : "") + DEMO_VOICE_LINE);
-      toast.info(
-        `Voice recognition failed (${e.error}) — filled a demo reply instead.`
-      );
+      micStreamRef.current?.getTracks().forEach((t) => t.stop());
+      micStreamRef.current = null;
+      if (e.error === "network" || e.error === "service-not-allowed") {
+        fillDemo(
+          `Voice recognition failed (${e.error}) — filled a demo reply instead.`
+        );
+      } else {
+        toast.error("Didn't catch that — please try again or type.");
+      }
     };
     recRef.current = rec;
     setListening(true);
