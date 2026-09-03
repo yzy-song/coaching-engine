@@ -19,6 +19,31 @@ const quadrantOrder = [
   { key: "blocked", x: "right", y: "bottom" },
 ] as const;
 
+const W = 340;
+const H = 340;
+const PAD = 36;
+const PLOT = W - PAD * 2;
+const MID = W / 2;
+const px = (v: number) => PAD + (Math.min(Math.max(v, 0), 5) / 5) * PLOT;
+const py = (v: number) => H - PAD - (Math.min(Math.max(v, 0), 5) / 5) * PLOT;
+
+const dimCode: Record<string, string> = {
+  service_recovery: "SR",
+  empathy: "EMP",
+  anticipation: "ANT",
+  communication: "COM",
+  composure: "CMP",
+  confidence: "CONF",
+  upselling: "UP",
+};
+
+const toneColor: Record<string, string> = {
+  emerald: "#34d399",
+  amber: "#fbbf24",
+  rose: "#fb7185",
+  violet: "#a78bfa",
+};
+
 const toneClasses: Record<string, { chip: string; ring: string; text: string }> = {
   emerald: {
     chip: "bg-emerald-500/15 text-emerald-300 border-emerald-400/30",
@@ -62,19 +87,10 @@ export function GapQuadrant({
         </CardHeader>
         <CardContent>
           <div className="relative mx-auto aspect-square max-w-sm">
-            {/* axes */}
-            <div className="absolute inset-x-0 top-1/2 h-px bg-border" />
-            <div className="absolute inset-y-0 left-1/2 w-px bg-border" />
-            <span className="absolute -top-1 left-1/2 -translate-x-1/2 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-              FLOOR
-            </span>
-            <span className="absolute top-1/2 -right-1 -translate-y-1/2 rotate-90 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-              PRACTICE
-            </span>
-
             {quadrantOrder.map(({ key, x, y }) => {
               const meta = quadrantMeta[key];
               const tone = toneClasses[meta.tone];
+              const isActive = active?.quadrant === key;
               return (
                 <button
                   key={key}
@@ -85,42 +101,179 @@ export function GapQuadrant({
                         selected
                     )
                   }
-                  className={`absolute flex size-[calc(50%-14px)] flex-col items-center justify-center gap-1 rounded-xl border p-2 text-center transition-all ${
-                    x === "left" ? "left-2" : "right-2"
-                  } ${y === "top" ? "top-2" : "bottom-2"} ${
-                    active?.quadrant === key
-                      ? `${tone.chip} ring-2 ${tone.ring}`
-                      : "border-dashed bg-muted/40 text-muted-foreground hover:bg-muted"
+                  className={`absolute z-0 flex size-[calc(50%-10px)] flex-col rounded-xl border p-2.5 transition-all ${
+                    x === "left"
+                      ? "left-2 items-start text-left"
+                      : "right-2 items-end text-right"
+                  } ${y === "top" ? "top-2 justify-start" : "bottom-2 justify-end"} ${
+                    isActive
+                      ? `${tone.chip} ring-1 ${tone.ring}`
+                      : "border-transparent hover:bg-white/5"
                   }`}
                 >
                   <span className="text-[10px] font-bold tracking-wide">
                     {meta.label}
                   </span>
-                  <span className="hidden text-[10px] leading-tight sm:block">
+                  <span className="hidden text-[10px] leading-tight opacity-70 sm:block">
                     {meta.headline}
                   </span>
                 </button>
               );
             })}
 
-            {active && (
-              <span
-                className={`absolute z-10 -translate-x-1/2 -translate-y-1/2 flex size-9 items-center justify-center rounded-full bg-background text-sm font-bold shadow-lg ring-2 ${
-                  toneClasses[quadrantMeta[active.quadrant].tone].ring
-                } ${
-                  active.quadrant === "blocked" || active.quadrant === "competent"
-                    ? "left-[75%]"
-                    : "left-[25%]"
-                } ${
-                  active.quadrant === "competent" || active.quadrant === "recalibrate"
-                    ? "top-[25%]"
-                    : "top-[75%]"
-                }`}
+            <svg
+              viewBox={`0 0 ${W} ${H}`}
+              className="pointer-events-none absolute inset-0 z-10 h-full w-full"
+            >
+              {Array.from({ length: 6 }, (_, i) => (
+                <g key={i}>
+                  <line
+                    x1={PAD}
+                    y1={py(i)}
+                    x2={W - PAD}
+                    y2={py(i)}
+                    stroke="oklch(1 0 0 / 5%)"
+                  />
+                  <line
+                    x1={px(i)}
+                    y1={PAD}
+                    x2={px(i)}
+                    y2={H - PAD}
+                    stroke="oklch(1 0 0 / 5%)"
+                  />
+                </g>
+              ))}
+              <line
+                x1={PAD}
+                y1={py(2.5)}
+                x2={W - PAD}
+                y2={py(2.5)}
+                stroke="oklch(1 0 0 / 10%)"
+                strokeDasharray="4 4"
+              />
+              <line
+                x1={px(2.5)}
+                y1={PAD}
+                x2={px(2.5)}
+                y2={H - PAD}
+                stroke="oklch(1 0 0 / 10%)"
+                strokeDasharray="4 4"
+              />
+
+              {Array.from({ length: 6 }, (_, i) => (
+                <g key={i}>
+                  <text
+                    x={px(i)}
+                    y={H - PAD + 15}
+                    textAnchor="middle"
+                    fontSize={9}
+                    fill="var(--muted-foreground)"
+                    opacity={0.7}
+                  >
+                    {i}
+                  </text>
+                  <text
+                    x={PAD - 8}
+                    y={py(i) + 3}
+                    textAnchor="end"
+                    fontSize={9}
+                    fill="var(--muted-foreground)"
+                    opacity={0.7}
+                  >
+                    {i}
+                  </text>
+                </g>
+              ))}
+
+              <polygon
+                points={`${MID},${PAD - 7} ${MID - 4},${PAD} ${MID + 4},${PAD}`}
+                fill="var(--muted-foreground)"
+                opacity={0.7}
+              />
+              <polygon
+                points={`${W - PAD + 7},${MID} ${W - PAD},${MID - 4} ${W - PAD},${MID + 4}`}
+                fill="var(--muted-foreground)"
+                opacity={0.7}
+              />
+              <text
+                x={MID}
+                y={H - 6}
+                textAnchor="middle"
+                fontSize={10}
+                fontWeight={600}
+                fill="var(--muted-foreground)"
               >
-                {active.practice_mean.toFixed(1)}
-              </span>
-            )}
+                PRACTICE →
+              </text>
+              <text
+                x={10}
+                y={MID}
+                textAnchor="middle"
+                fontSize={10}
+                fontWeight={600}
+                fill="var(--muted-foreground)"
+                transform={`rotate(-90 10 ${MID})`}
+              >
+                FLOOR ↑
+              </text>
+
+              {gap.dimensions.map((d) => {
+                const color = toneColor[quadrantMeta[d.quadrant].tone];
+                const isSelected = selected === d.dimension;
+                const cx = px(d.practice_mean);
+                const cy = py(d.floor_mean);
+                const anchor = cx > MID ? "end" : "start";
+                const lx = cx + (cx > MID ? -11 : 11);
+                const ly = cy + (cy < MID ? -11 : 15);
+                return (
+                  <g key={d.dimension}>
+                    {isSelected && (
+                      <circle cx={cx} cy={cy} r={13} fill={color} opacity={0.18} />
+                    )}
+                    <circle
+                      cx={cx}
+                      cy={cy}
+                      r={12}
+                      fill="transparent"
+                      className="cursor-pointer"
+                      style={{ pointerEvents: "auto" }}
+                      onClick={() => setSelected(d.dimension)}
+                    >
+                      <title>
+                        {`${dimensionShort[d.dimension]} — practice ${d.practice_mean.toFixed(1)}, floor ${d.floor_mean.toFixed(1)}`}
+                      </title>
+                    </circle>
+                    <circle
+                      cx={cx}
+                      cy={cy}
+                      r={isSelected ? 6.5 : 5}
+                      fill={color}
+                      stroke="var(--background)"
+                      strokeWidth={2}
+                      opacity={isSelected ? 1 : 0.75}
+                    />
+                    <text
+                      x={lx}
+                      y={ly}
+                      textAnchor={anchor}
+                      fontSize={10}
+                      fontWeight={600}
+                      fill={color}
+                      className="tabular-nums"
+                    >
+                      {dimCode[d.dimension] ?? dimensionShort[d.dimension]} ·{" "}
+                      {d.practice_mean.toFixed(1)}/{d.floor_mean.toFixed(1)}
+                    </text>
+                  </g>
+                );
+              })}
+            </svg>
           </div>
+
+          <p className="mt-2 text-center text-[11px] text-muted-foreground">
+            Each point is one scored dimension — practice / floor. Tap a point
+            or a quadrant to inspect it.
+          </p>
 
           {active && (
             <div className="mt-4 rounded-xl border bg-muted/40 p-4">
