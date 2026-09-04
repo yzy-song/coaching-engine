@@ -324,10 +324,6 @@
   html {
     background-color: var(--background);
   }
-  html,
-  body {
-    overflow-x: clip;
-  }
   body {
     @apply bg-background text-foreground;
     background-image:
