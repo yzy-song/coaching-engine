@@ -29,7 +29,7 @@ export default function StaffHomePage() {
                   level === null
                     ? "bg-muted text-muted-foreground"
                     : level >= 4
-                      ? "bg-emerald-500/15 text-emerald-300"
+                      ? "bg-[oklch(0.66_0.11_150)]/15 text-[oklch(0.78_0.1_150)]"
                       : "bg-amber-500/15 text-amber-200"
                 }`}
               >

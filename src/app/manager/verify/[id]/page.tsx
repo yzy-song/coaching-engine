@@ -30,7 +30,7 @@ export default async function VerifyDetailPage(
         Back to queue
       </Button>
 
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="msg-in flex flex-wrap items-center gap-3">
         <div className="flex size-10 items-center justify-center rounded-full bg-accent text-sm font-bold text-accent-foreground">
           {staff?.name
             .split(" ")
@@ -45,10 +45,14 @@ export default async function VerifyDetailPage(
         </div>
       </div>
 
-      <RecommendationCard recommendation={recommendation} />
+      <div className="fade-up [animation-delay:120ms]">
+        <RecommendationCard recommendation={recommendation} />
+      </div>
 
       {recommendation.status === "pending_verify" ? (
-        <VerifyPanel recommendation={recommendation} />
+        <div className="fade-up [animation-delay:240ms]">
+          <VerifyPanel recommendation={recommendation} />
+        </div>
       ) : (
         <p className="rounded-xl border bg-muted/30 p-4 text-center text-sm text-muted-foreground">
           This recommendation was {recommendation.status}. Refresh the queue

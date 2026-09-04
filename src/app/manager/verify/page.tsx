@@ -13,7 +13,7 @@ export default async function VerifyQueuePage() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="msg-in">
         <h1 className="text-2xl font-semibold tracking-tight">Verify queue</h1>
         <p className="text-sm text-muted-foreground">
           The agent drafts with citations, then stops. Nothing routes until
@@ -25,7 +25,10 @@ export default async function VerifyQueuePage() {
       <div className="space-y-3">
         {pending.map((rec, i) => (
           <Link key={rec.id} href={`/manager/verify/${rec.id}`} className="block">
-            <Card className="transition-colors hover:bg-muted/30">
+            <Card
+              className="fade-up transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-muted/30 hover:shadow-[0_10px_30px_-16px_var(--primary)]"
+              style={{ animationDelay: `${i * 90}ms` }}
+            >
               <CardContent className="flex flex-wrap items-center gap-3 p-4 md:p-5">
                 {i === 0 && (
                   <Badge className="bg-primary text-primary-foreground">
@@ -48,7 +51,7 @@ export default async function VerifyQueuePage() {
                   className={
                     rec.classification === "policy"
                       ? "border-rose-400/30 bg-rose-500/10 text-rose-300"
-                      : "border-sky-400/30 bg-sky-500/10 text-sky-300"
+                      : "border-amber-400/30 bg-amber-500/10 text-amber-300"
                   }
                 >
                   {rec.classification}
@@ -78,7 +81,7 @@ export default async function VerifyQueuePage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
-                <CheckCircle2 className="size-5 text-emerald-400" />
+                <CheckCircle2 className="size-5 text-[oklch(0.7_0.11_150)]" />
                 Queue clear
               </CardTitle>
             </CardHeader>

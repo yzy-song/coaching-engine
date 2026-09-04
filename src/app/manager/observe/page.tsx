@@ -7,7 +7,7 @@ export const metadata = { title: "Log observation — Manager Console" };
 export default function ObservePage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="msg-in flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Log a floor observation</h1>
           <p className="text-sm text-muted-foreground">
@@ -19,7 +19,9 @@ export default function ObservePage() {
           ~20s
         </div>
       </div>
-      <ObservationForm staff={staffMembers} />
+      <div className="fade-up [animation-delay:150ms]">
+        <ObservationForm staff={staffMembers} />
+      </div>
     </div>
   );
 }

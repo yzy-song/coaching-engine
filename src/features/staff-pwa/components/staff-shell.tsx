@@ -26,7 +26,7 @@ export function StaffShell({ children }: { children: React.ReactNode }) {
               Front Desk · The Meridian
             </p>
           </div>
-          <div className="ml-auto flex size-8 items-center justify-center rounded-full bg-emerald-500/15 text-xs font-bold text-emerald-300 ring-1 ring-emerald-400/30">
+          <div className="ml-auto flex size-8 items-center justify-center rounded-full bg-[oklch(0.66_0.11_150)]/15 text-xs font-bold text-[oklch(0.78_0.1_150)] ring-1 ring-[oklch(0.66_0.11_150)]/30">
             4.0
           </div>
         </header>

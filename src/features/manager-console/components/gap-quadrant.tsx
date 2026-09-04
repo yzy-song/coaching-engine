@@ -38,32 +38,32 @@ const dimCode: Record<string, string> = {
 };
 
 const toneColor: Record<string, string> = {
-  emerald: "#34d399",
-  amber: "#fbbf24",
-  rose: "#fb7185",
-  violet: "#a78bfa",
+  emerald: "oklch(0.66 0.11 150)",
+  amber: "oklch(0.79 0.12 80)",
+  rose: "oklch(0.69 0.13 35)",
+  violet: "oklch(0.64 0.07 340)",
 };
 
 const toneClasses: Record<string, { chip: string; ring: string; text: string }> = {
   emerald: {
-    chip: "bg-emerald-500/15 text-emerald-300 border-emerald-400/30",
-    ring: "ring-emerald-400",
-    text: "text-emerald-300",
+    chip: "bg-[oklch(0.66_0.11_150)]/15 text-[oklch(0.78_0.1_150)] border-[oklch(0.66_0.11_150)]/30",
+    ring: "ring-[oklch(0.66_0.11_150)]",
+    text: "text-[oklch(0.78_0.1_150)]",
   },
   amber: {
-    chip: "bg-amber-500/15 text-amber-200 border-amber-400/30",
-    ring: "ring-amber-400",
-    text: "text-amber-300",
+    chip: "bg-[oklch(0.79_0.12_80)]/15 text-[oklch(0.84_0.11_85)] border-[oklch(0.79_0.12_80)]/30",
+    ring: "ring-[oklch(0.79_0.12_80)]",
+    text: "text-[oklch(0.84_0.11_85)]",
   },
   rose: {
-    chip: "bg-rose-500/15 text-rose-300 border-rose-400/30",
-    ring: "ring-rose-400",
-    text: "text-rose-300",
+    chip: "bg-[oklch(0.69_0.13_35)]/15 text-[oklch(0.78_0.11_35)] border-[oklch(0.69_0.13_35)]/30",
+    ring: "ring-[oklch(0.69_0.13_35)]",
+    text: "text-[oklch(0.78_0.11_35)]",
   },
   violet: {
-    chip: "bg-violet-500/15 text-violet-300 border-violet-400/30",
-    ring: "ring-violet-400",
-    text: "text-violet-300",
+    chip: "bg-[oklch(0.64_0.07_340)]/15 text-[oklch(0.76_0.07_340)] border-[oklch(0.64_0.07_340)]/30",
+    ring: "ring-[oklch(0.64_0.07_340)]",
+    text: "text-[oklch(0.76_0.07_340)]",
   },
 };
 
@@ -217,7 +217,7 @@ export function GapQuadrant({
                 FLOOR ↑
               </text>
 
-              {gap.dimensions.map((d) => {
+              {gap.dimensions.map((d, i) => {
                 const color = toneColor[quadrantMeta[d.quadrant].tone];
                 const isSelected = selected === d.dimension;
                 const cx = px(d.practice_mean);
@@ -251,6 +251,8 @@ export function GapQuadrant({
                       stroke="var(--background)"
                       strokeWidth={2}
                       opacity={isSelected ? 1 : 0.75}
+                      className="pop-in"
+                      style={{ animationDelay: `${450 + i * 110}ms` }}
                     />
                     <text
                       x={lx}
@@ -276,7 +278,10 @@ export function GapQuadrant({
           </p>
 
           {active && (
-            <div className="mt-4 rounded-xl border bg-muted/40 p-4">
+            <div
+              key={active.dimension}
+              className="msg-in mt-4 rounded-xl border bg-muted/40 p-4"
+            >
               <div className="flex items-center justify-between gap-2">
                 <p className="text-sm font-semibold">
                   {dimensionShort[active.dimension]} —{" "}

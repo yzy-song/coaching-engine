@@ -25,7 +25,7 @@ const moodTone: Record<string, string> = {
   neutral: "bg-muted text-muted-foreground",
   frustrated: "bg-amber-500/15 text-amber-200",
   escalating: "bg-rose-500/15 text-rose-300",
-  calming: "bg-emerald-500/15 text-emerald-300",
+  calming: "bg-[oklch(0.66_0.11_150)]/15 text-[oklch(0.78_0.1_150)]",
 };
 
 const moodShiftNote: Record<string, string> = {

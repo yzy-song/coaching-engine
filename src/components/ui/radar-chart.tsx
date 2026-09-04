@@ -110,9 +110,13 @@ export function RadarChart({
           );
         })}
 
-        {series.map((s) =>
+        {series.map((s, si) =>
           axes.every((a) => s.values[a] == null) ? null : (
-            <g key={s.id}>
+            <g
+              key={s.id}
+              className="msg-in"
+              style={{ animationDelay: `${350 + si * 280}ms` }}
+            >
               {!s.dashed && (
                 <polygon
                   points={seriesPoints(s)}
@@ -131,6 +135,11 @@ export function RadarChart({
                 strokeWidth={2}
                 strokeLinejoin="round"
                 strokeDasharray={s.dashed ? "6 4" : undefined}
+                pathLength={s.dashed ? undefined : 100}
+                className={s.dashed ? undefined : "radar-draw"}
+                style={
+                  s.dashed ? undefined : { animationDelay: `${500 + si * 280}ms` }
+                }
               />
             </g>
           )
@@ -144,7 +153,14 @@ export function RadarChart({
             const lp = pointFor(i, (v / max) * R + 11);
             return (
               <g key={a}>
-                <circle cx={p.x} cy={p.y} r={2.5} fill={primary.color} />
+                <circle
+                  cx={p.x}
+                  cy={p.y}
+                  r={2.5}
+                  fill={primary.color}
+                  className="pop-in"
+                  style={{ animationDelay: `${1100 + i * 90}ms` }}
+                />
                 <text
                   x={lp.x}
                   y={lp.y}
@@ -176,29 +192,31 @@ export function RadarChart({
         ))}
       </div>
 
-      <table className="sr-only">
-        <caption>{ariaLabel}</caption>
-        <thead>
-          <tr>
-            <th scope="col">Dimension</th>
-            {series.map((s) => (
-              <th key={s.id} scope="col">
-                {s.label}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {axes.map((a) => (
-            <tr key={a}>
-              <th scope="row">{dimensionShort[a]}</th>
+      <div className="sr-only">
+        <table>
+          <caption>{ariaLabel}</caption>
+          <thead>
+            <tr>
+              <th scope="col">Dimension</th>
               {series.map((s) => (
-                <td key={s.id}>{s.values[a] == null ? "no data" : s.values[a]}</td>
+                <th key={s.id} scope="col">
+                  {s.label}
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {axes.map((a) => (
+              <tr key={a}>
+                <th scope="row">{dimensionShort[a]}</th>
+                {series.map((s) => (
+                  <td key={s.id}>{s.values[a] == null ? "no data" : s.values[a]}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       {caption && (
         <figcaption className="mt-2 text-center text-xs text-muted-foreground">

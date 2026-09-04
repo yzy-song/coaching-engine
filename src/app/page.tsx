@@ -15,7 +15,9 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { CountUp } from "@/components/count-up";
 import { Reveal } from "@/components/reveal";
+import { ScrollProgress } from "@/components/scroll-progress";
 
 const loopSteps = [
   {
@@ -45,16 +47,26 @@ const loopSteps = [
   },
 ];
 
-const stats = [
-  { value: "2", label: "independent data streams — practice and floor" },
-  { value: "0", label: "actions route without a human verdict" },
-  { value: "100%", label: "of claims cite a source you can open" },
+const stats: { value: number | string; suffix?: string; label: string }[] = [
+  { value: 2, label: "independent data streams — practice and floor" },
+  { value: 0, label: "actions route without a human verdict" },
+  { value: 100, suffix: "%", label: "of claims cite a source you can open" },
   { value: "k ≥ 3", label: "anonymity on every team insight" },
+];
+
+const narrative = [
+  "One shift, one gap, one verdict",
+  "Marta logs a 20-second observation",
+  "The agent drafts — cited, not guessed",
+  "Nothing routes without a human verdict",
+  "Calibration moves with every confirm",
+  "Staff see every record about them",
 ];
 
 export default function LandingPage() {
   return (
     <div className="relative min-h-dvh overflow-x-clip">
+      <ScrollProgress />
       <Background />
 
       <header className="sticky top-0 z-30 border-b bg-background/70 backdrop-blur-md">
@@ -99,7 +111,7 @@ export default function LandingPage() {
           >
             Training shows completion.
             <br />
-            <span className="bg-gradient-to-r from-primary via-chart-2 to-chart-4 bg-clip-text text-transparent">
+            <span className="gradient-x bg-gradient-to-r from-primary via-chart-2 to-chart-4 bg-clip-text text-transparent">
               This shows what changed on the floor.
             </span>
           </h1>
@@ -147,16 +159,46 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* ── Narrative band ── */}
+        <section className="border-y border-border/60 bg-card/40 py-4">
+          <div className="flex overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]">
+            <div className="marquee flex w-max shrink-0 items-center">
+              {[0, 1].map((copy) => (
+                <div
+                  key={copy}
+                  aria-hidden={copy === 1}
+                  className="flex items-center"
+                >
+                  {narrative.map((item) => (
+                    <span
+                      key={item}
+                      className="flex items-center gap-6 pr-6 text-[13px] font-medium text-muted-foreground"
+                    >
+                      {item}
+                      <span className="size-1 rounded-full bg-primary" />
+                    </span>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* ── Stats ── */}
         <section className="mx-auto max-w-5xl px-4">
           <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border bg-border md:grid-cols-4">
             {stats.map((stat, i) => (
-              <Reveal key={stat.value} delay={i * 80} className="bg-card">
+              <Reveal key={stat.label} delay={i * 80} className="bg-card">
                 <div className="p-6">
                   <p className="font-mono text-3xl font-bold tabular-nums text-primary">
-                    {stat.value}
+                    {typeof stat.value === "number" ? (
+                      <CountUp value={stat.value} />
+                    ) : (
+                      stat.value
+                    )}
+                    {stat.suffix}
                   </p>
-                  <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+                  <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
                     {stat.label}
                   </p>
                 </div>
@@ -192,7 +234,7 @@ export default function LandingPage() {
                     </span>
                   </div>
                   <p className="mt-3 text-sm font-semibold">{step.title}</p>
-                  <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+                  <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
                     {step.text}
                   </p>
                 </div>
@@ -230,7 +272,7 @@ export default function LandingPage() {
                         Practice stream
                       </p>
                     </div>
-                    <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                    <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
                       Diego's scored scenarios — his own words, rated on the
                       BARS framework.
                     </p>
@@ -240,7 +282,7 @@ export default function LandingPage() {
                       <ClipboardCheck className="size-4 text-chart-2" />
                       <p className="text-xs font-semibold">Floor stream</p>
                     </div>
-                    <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                    <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
                       Marta's 20-second observation — what she personally saw
                       on shift.
                     </p>
@@ -284,11 +326,11 @@ export default function LandingPage() {
 
             <Reveal className="md:col-span-2">
               <div className="h-full rounded-2xl border bg-card p-6">
-                <div className="flex size-9 items-center justify-center rounded-xl bg-emerald-500/15">
-                  <ShieldCheck className="size-4 text-emerald-300" />
+                <div className="flex size-9 items-center justify-center rounded-xl bg-[oklch(0.66_0.11_150)]/15">
+                  <ShieldCheck className="size-4 text-[oklch(0.78_0.1_150)]" />
                 </div>
                 <p className="mt-3 text-sm font-semibold">Human-in-the-loop</p>
-                <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+                <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
                   Nothing routes on AI output alone. Confirm, correct or
                   reject — and nothing about a staff member is acted on
                   without their visibility.
@@ -302,7 +344,7 @@ export default function LandingPage() {
                   <Gauge className="size-4 text-primary" />
                 </div>
                 <p className="mt-3 text-sm font-semibold">Calibration you can watch</p>
-                <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+                <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
                   The agreement between the agent's read and the manager's
                   verdict — updated with every decision.
                 </p>
@@ -320,13 +362,13 @@ export default function LandingPage() {
 
             <Reveal delay={180} className="md:col-span-2">
               <div className="flex h-full flex-col rounded-2xl border bg-card p-6">
-                <div className="flex size-9 items-center justify-center rounded-xl bg-violet-500/15">
-                  <GraduationCap className="size-4 text-violet-300" />
+                <div className="flex size-9 items-center justify-center rounded-xl bg-[oklch(0.64_0.07_340)]/15">
+                  <GraduationCap className="size-4 text-[oklch(0.76_0.07_340)]" />
                 </div>
                 <p className="mt-3 text-sm font-semibold">
                   Where research stops, we start
                 </p>
-                <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+                <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
                   Cornell's AI hospitality training built the simulation —
                   guest, coach and report agents grounded in hotel SOPs. It
                   stopped at practice. We close the loop on the floor.
@@ -348,7 +390,7 @@ export default function LandingPage() {
         {/* ── Final CTA ── */}
         <section className="mx-auto max-w-5xl px-4 pb-24 pt-24">
           <Reveal>
-            <div className="relative overflow-hidden rounded-3xl border bg-card p-10 text-center md:p-16">
+            <div className="conic-border relative overflow-hidden rounded-3xl p-10 text-center md:p-16">
               <div className="pointer-events-none absolute -top-24 left-1/2 size-72 -translate-x-1/2 rounded-full bg-primary/20 blur-3xl" />
               <h2 className="relative text-2xl font-semibold tracking-tight md:text-4xl">
                 Walk the demo in five minutes
@@ -397,14 +439,14 @@ function Background() {
       <div
         className="aurora-drift absolute -top-20 right-[12%] size-96 rounded-full opacity-50 blur-3xl dark:opacity-90"
         style={{
-          backgroundColor: "oklch(0.6 0.18 260 / 0.5)",
+          backgroundColor: "oklch(0.63 0.11 45 / 0.5)",
           animationDelay: "-6s",
         }}
       />
       <div
         className="aurora-drift absolute top-[42rem] -left-32 size-[30rem] rounded-full opacity-40 blur-3xl dark:opacity-70"
         style={{
-          backgroundColor: "oklch(0.7 0.13 80 / 0.4)",
+          backgroundColor: "oklch(0.79 0.12 80 / 0.4)",
           animationDelay: "-12s",
         }}
       />

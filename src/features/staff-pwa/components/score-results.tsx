@@ -37,7 +37,7 @@ export function ScoreResults({ result }: { result: ScoreResult }) {
                   level === null
                     ? "bg-muted text-muted-foreground"
                     : level >= 4
-                      ? "bg-emerald-500/15 text-emerald-300"
+                      ? "bg-[oklch(0.66_0.11_150)]/15 text-[oklch(0.78_0.1_150)]"
                       : level === 3
                         ? "bg-amber-500/15 text-amber-200"
                         : "bg-rose-500/15 text-rose-300"
@@ -56,7 +56,7 @@ export function ScoreResults({ result }: { result: ScoreResult }) {
                       className={`h-1.5 w-6 rounded-full ${
                         level !== null && n <= level
                           ? level >= 4
-                            ? "bg-emerald-500"
+                            ? "bg-[oklch(0.66_0.11_150)]"
                             : level === 3
                               ? "bg-amber-500"
                               : "bg-rose-500"

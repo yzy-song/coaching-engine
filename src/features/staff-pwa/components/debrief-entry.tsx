@@ -41,8 +41,8 @@ export function DebriefEntry() {
       <div className="space-y-4">
         <div className="rounded-2xl border bg-card p-4">
           <div className="flex items-center gap-2">
-            <div className="flex size-8 items-center justify-center rounded-full bg-emerald-500/15">
-              <Sparkles className="size-4 text-emerald-300" />
+            <div className="flex size-8 items-center justify-center rounded-full bg-[oklch(0.66_0.11_150)]/15">
+              <Sparkles className="size-4 text-[oklch(0.78_0.1_150)]" />
             </div>
             <p className="text-sm font-semibold">
               Your hotel's own standard — straight after your shift

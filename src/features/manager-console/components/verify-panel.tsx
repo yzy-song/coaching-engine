@@ -129,7 +129,7 @@ export function VerifyPanel({
             className={`rounded-xl border p-3 text-left transition-all ${
               verdict === v
                 ? v === "confirmed"
-                  ? "border-emerald-400 bg-emerald-500/10 ring-2 ring-emerald-400/20"
+                  ? "border-[oklch(0.66_0.11_150)] bg-[oklch(0.66_0.11_150)]/10 ring-2 ring-[oklch(0.66_0.11_150)]/20"
                   : v === "corrected"
                     ? "border-amber-400 bg-amber-500/10 ring-2 ring-amber-400/20"
                     : "border-rose-400 bg-rose-500/10 ring-2 ring-rose-400/20"
@@ -137,7 +137,7 @@ export function VerifyPanel({
             }`}
           >
             <span className="flex items-center gap-2 text-sm font-semibold">
-              {v === "confirmed" && <Check className="size-4 text-emerald-300" />}
+              {v === "confirmed" && <Check className="size-4 text-[oklch(0.78_0.1_150)]" />}
               {v === "corrected" && <RotateCcw className="size-4 text-amber-300" />}
               {v === "rejected" && <X className="size-4 text-rose-300" />}
               {verdictCopy[v].label}
@@ -223,14 +223,14 @@ function VerifyResultPanel({
       <div
         className={`flex items-center gap-3 rounded-xl border p-4 ${
           verdict === "confirmed"
-            ? "border-emerald-400/40 bg-emerald-500/10"
+            ? "border-[oklch(0.66_0.11_150)]/40 bg-[oklch(0.66_0.11_150)]/10"
             : verdict === "corrected"
               ? "border-amber-400/40 bg-amber-500/10"
               : "border-rose-400/40 bg-rose-500/10"
         }`}
       >
         {verdict === "confirmed" && (
-          <Check className="size-6 text-emerald-300" />
+          <Check className="size-6 text-[oklch(0.78_0.1_150)]" />
         )}
         {verdict === "corrected" && (
           <RotateCcw className="size-6 text-amber-300" />

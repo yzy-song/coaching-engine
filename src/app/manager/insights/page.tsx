@@ -17,7 +17,7 @@ export default async function InsightsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="msg-in">
         <h1 className="text-2xl font-semibold tracking-tight">Team insights</h1>
         <p className="text-sm text-muted-foreground">
           Patterns across the whole team, shown only when at least{" "}
@@ -27,19 +27,23 @@ export default async function InsightsPage() {
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-2 text-xs">
+      <div className="fade-up [animation-delay:100ms] flex flex-wrap gap-2 text-xs">
         <span className="flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-muted-foreground">
           Window {insights.window.start} → {insights.window.end}
         </span>
         <span className="flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-muted-foreground">
-          <ShieldCheck className="size-3.5 text-emerald-400" />
+          <ShieldCheck className="size-3.5 text-[oklch(0.7_0.11_150)]" />
           k-anonymity threshold: {insights.k_threshold}
         </span>
       </div>
 
       <div className="space-y-4">
-        {insights.patterns.map((pattern) => (
-          <Card key={pattern.id}>
+        {insights.patterns.map((pattern, i) => (
+          <Card
+            key={pattern.id}
+            className="fade-up transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[0_10px_30px_-16px_var(--primary)]"
+            style={{ animationDelay: `${200 + i * 100}ms` }}
+          >
             <CardHeader className="pb-2">
               <div className="flex flex-wrap items-center gap-2">
                 <CardTitle className="text-base">
