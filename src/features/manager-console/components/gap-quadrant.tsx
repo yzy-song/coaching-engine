@@ -84,6 +84,11 @@ export function GapQuadrant({
           <CardTitle className="text-base">
             Practice vs floor — where {staffName.split(" ")[0]} sits
           </CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Practice = simulation scores. Floor = what you observed on shift.
+            Points below the diagonal mean practice isn&apos;t transferring to
+            the floor.
+          </p>
         </CardHeader>
         <CardContent>
           <div className="relative mx-auto aspect-square max-w-sm">
@@ -92,15 +97,8 @@ export function GapQuadrant({
               const tone = toneClasses[meta.tone];
               const isActive = active?.quadrant === key;
               return (
-                <button
+                <div
                   key={key}
-                  type="button"
-                  onClick={() =>
-                    setSelected(
-                      gap.dimensions.find((d) => d.quadrant === key)?.dimension ??
-                        selected
-                    )
-                  }
                   className={`absolute z-0 flex size-[calc(50%-10px)] flex-col rounded-xl border p-2.5 transition-all ${
                     x === "left"
                       ? "left-2 items-start text-left"
@@ -108,7 +106,7 @@ export function GapQuadrant({
                   } ${y === "top" ? "top-2 justify-start" : "bottom-2 justify-end"} ${
                     isActive
                       ? `${tone.chip} ring-1 ${tone.ring}`
-                      : "border-transparent hover:bg-white/5"
+                      : "border-transparent"
                   }`}
                 >
                   <span className="text-[10px] font-bold tracking-wide">
@@ -117,7 +115,7 @@ export function GapQuadrant({
                   <span className="hidden text-[10px] leading-tight opacity-70 sm:block">
                     {meta.headline}
                   </span>
-                </button>
+                </div>
               );
             })}
 
@@ -159,6 +157,26 @@ export function GapQuadrant({
                 stroke="oklch(1 0 0 / 10%)"
                 strokeDasharray="4 4"
               />
+              <line
+                x1={px(0)}
+                y1={py(0)}
+                x2={px(5)}
+                y2={py(5)}
+                stroke="oklch(0.7 0.13 50 / 40%)"
+              />
+              <text
+                x={MID - 10}
+                y={MID - 10}
+                textAnchor="middle"
+                fontSize={9}
+                fill="oklch(0.7 0.13 50)"
+                stroke="var(--background)"
+                strokeWidth={3}
+                paintOrder="stroke"
+                transform={`rotate(-45 ${MID - 10} ${MID - 10})`}
+              >
+                practice = floor
+              </text>
 
               {Array.from({ length: 6 }, (_, i) => (
                 <g key={i}>
@@ -203,7 +221,7 @@ export function GapQuadrant({
                 fontWeight={600}
                 fill="var(--muted-foreground)"
               >
-                PRACTICE →
+                Practice score (simulation) →
               </text>
               <text
                 x={10}
@@ -214,7 +232,7 @@ export function GapQuadrant({
                 fill="var(--muted-foreground)"
                 transform={`rotate(-90 10 ${MID})`}
               >
-                FLOOR ↑
+                Floor score (observed) ↑
               </text>
 
               {gap.dimensions.map((d, i) => {
@@ -263,8 +281,8 @@ export function GapQuadrant({
                       fill={color}
                       className="tabular-nums"
                     >
-                      {dimCode[d.dimension] ?? dimensionShort[d.dimension]} ·{" "}
-                      {d.practice_mean.toFixed(1)}/{d.floor_mean.toFixed(1)}
+                      {dimCode[d.dimension] ?? dimensionShort[d.dimension]}{" "}
+                      {d.practice_mean.toFixed(1)} → {d.floor_mean.toFixed(1)}
                     </text>
                   </g>
                 );
@@ -273,8 +291,8 @@ export function GapQuadrant({
           </div>
 
           <p className="mt-2 text-center text-[11px] text-muted-foreground">
-            Each point is one scored dimension — practice / floor. Tap a point
-            or a quadrant to inspect it.
+            Each point is one scored dimension, shown as practice → floor. Tap
+            a point to read what it means.
           </p>
 
           {active && (

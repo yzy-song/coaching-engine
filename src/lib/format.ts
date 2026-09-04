@@ -36,28 +36,28 @@ export interface QuadrantMeta {
 
 export const quadrantMeta: Record<Quadrant, QuadrantMeta> = {
   competent: {
-    label: "COMPETENT",
-    headline: "Strong practice, strong floor.",
+    label: "No gap",
+    headline: "Strong in practice and on the floor.",
     reading: "Stretch them. Promote. Use as a peer coach.",
     tone: "emerald",
   },
   skill_gap: {
-    label: "SKILL GAP",
+    label: "Needs practice",
     headline: "Weak in both.",
     reading:
       "Targeted practice — the only quadrant where a simulation is the right answer.",
     tone: "amber",
   },
   blocked: {
-    label: "BLOCKED",
-    headline: "Strong practice, weak floor.",
+    label: "Blocked",
+    headline: "Knows how, held back on the floor.",
     reading:
       "They know how. Something is stopping them: pressure, time, unclear authority. Do NOT send more training.",
     tone: "rose",
   },
   recalibrate: {
-    label: "RECALIBRATE",
-    headline: "Weak practice, strong floor.",
+    label: "Check the standard",
+    headline: "Strong floor, weak practice.",
     reading:
       "Rubric or scenario mismatch — or they compensate with charm. A signal about our scoring, not about them.",
     tone: "violet",

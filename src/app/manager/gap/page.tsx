@@ -50,8 +50,9 @@ export default async function GapPage(
                 {(staff?.name ?? "staff member").split(" ")[0]}
               </CardTitle>
               <p className="text-xs text-muted-foreground">
-                Every scored dimension on one chart. Dashed is the floor you
-                observed; solid is practice performance.
+                Every scored dimension on one chart. Solid = practice
+                (simulation). Dashed = floor (observed). The dashed line
+                sitting inside the solid one is the transfer gap.
               </p>
             </CardHeader>
             <CardContent className="mx-auto w-full max-w-md">
