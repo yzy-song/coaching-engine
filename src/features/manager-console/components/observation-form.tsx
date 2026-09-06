@@ -1,282 +1,375 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Lock, LockOpen, Sparkles } from "lucide-react";
+import { Lock, LockOpen, Timer } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { observationDimensionLabels } from "@/lib/format";
-import type { ObservationDimension, StaffMember } from "@/lib/types";
+import { managerApi } from "@/features/manager-console/api/managerApi";
+import { dimensionShort, observationDimensionLabels } from "@/lib/format";
+import type {
+  ObservationDimension,
+  StaffMember,
+  StaffScoreRow,
+} from "@/lib/types";
 
-const RATED_DIMENSIONS: Array<{
-  dimension: ObservationDimension;
-  prompt: string;
-}> = [
-  {
-    dimension: "service_recovery",
-    prompt: "Did they attempt recovery before escalating?",
-  },
-  {
-    dimension: "empathy",
-    prompt: "Did they validate what the guest actually said?",
-  },
-  {
-    dimension: "composure",
-    prompt: "What did they actually say under pressure?",
-  },
+/**
+ * The manager's observe surface, redesigned as a quick capture with a record
+ * anchor: one card on top to log a staff member's floor moment (staff chip,
+ * dimension, BARS level, optional one-line note), and the tapped staff
+ * member's existing floor observations beside it — so the manager sees what
+ * is already on the record before their judgement lands.
+ *
+ * Submission keeps the observation route contract: one rated dimension per
+ * capture, an Idempotency-Key on the write (double tap on hotel wifi cannot
+ * log twice), and the page's own feedback line instead of a redirect — the
+ * manager can keep capturing for the rest of the shift.
+ */
+
+const CAPTURE_DIMENSIONS: ObservationDimension[] = [
+  "service_recovery",
+  "empathy",
+  "communication",
+  "composure",
+  "anticipation",
 ];
 
+const LEVELS = [1, 2, 3, 4, 5] as const;
+
+const FLOOR_DOT = "text-[oklch(0.78_0.11_35)]";
+const FLOOR_PILL =
+  "bg-[oklch(0.69_0.13_35)]/15 text-[oklch(0.78_0.11_35)] border-[oklch(0.69_0.13_35)]/30";
+
+type RecordState =
+  | { kind: "loading" }
+  | { kind: "error" }
+  | { kind: "ready"; rows: StaffScoreRow[] };
+
+const CHIP_SELECTED =
+  "border-primary bg-primary text-primary-foreground";
+const CHIP_IDLE = "border bg-card text-foreground hover:bg-muted/40";
+
 export function ObservationForm({ staff }: { staff: StaffMember[] }) {
-  const router = useRouter();
   const [staffId, setStaffId] = useState(staff[0]?.id ?? "");
-  const [context, setContext] = useState("");
-  const [whatHappened, setWhatHappened] = useState("");
-  const [ratings, setRatings] = useState<
-    Record<string, number | null>
-  >({
-    service_recovery: null,
-    empathy: null,
-    composure: null,
-  });
+  const [dimension, setDimension] = useState<ObservationDimension | null>(null);
+  const [level, setLevel] = useState<number | null>(null);
+  const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [unlocked, setUnlocked] = useState(false);
-  const [result, setResult] = useState<{ recommendation_id: string } | null>(null);
-  const [errors, setErrors] = useState<{
-    context?: string;
-    whatHappened?: string;
-    ratings?: string;
-  }>({});
+  const [loggedName, setLoggedName] = useState<string | null>(null);
+  const [anchorVersion, setAnchorVersion] = useState(0);
+  const [record, setRecord] = useState<RecordState>({ kind: "loading" });
 
+  const member = staff.find((s) => s.id === staffId) ?? staff[0];
+  const selectedName = member?.name ?? "";
+
+  // The record anchors follow the tapped chip and refresh after each submit.
   useEffect(() => {
-    if (!unlocked) return;
-    const t = window.setTimeout(() => {
-      router.push(`/manager/gap?staff=${staffId}&fresh=1`);
-    }, 2600);
-    return () => window.clearTimeout(t);
-  }, [unlocked, staffId, router]);
+    let cancelled = false;
+    setRecord({ kind: "loading" });
+    managerApi
+      .getScores(staffId, "floor")
+      .then((res) => {
+        if (cancelled) return;
+        const rows = [...res.scores].sort((a, b) =>
+          b.recorded_at.localeCompare(a.recorded_at)
+        );
+        setRecord({ kind: "ready", rows });
+      })
+      .catch(() => {
+        if (!cancelled) setRecord({ kind: "error" });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [staffId, anchorVersion]);
 
-  const validate = () => {
-    const next: typeof errors = {};
-    if (!context.trim()) {
-      next.context = "Describe the situation — e.g. where and what went wrong.";
-    }
-    if (!whatHappened.trim()) {
-      next.whatHappened = "Say what you saw the staff member do.";
-    }
-    const missing = RATED_DIMENSIONS.filter(
-      ({ dimension }) => ratings[dimension] === null
-    );
-    if (missing.length > 0) {
-      next.ratings =
-        missing.length === RATED_DIMENSIONS.length
-          ? "Rate all three behaviours — the transfer gap is computed from them."
-          : `Still to rate: ${missing
-              .map(({ dimension }) => observationDimensionLabels[dimension])
-              .join(", ")}.`;
-    }
-    return next;
+  const beginCapture = () => {
+    if (loggedName !== null) setLoggedName(null);
   };
 
   const handleSubmit = async () => {
     if (submitting) return;
-    const next = validate();
-    if (next.context || next.whatHappened || next.ratings) {
-      setErrors(next);
+    if (!dimension || level === null) {
       toast.warning(
-        "A few fields are missing — the highlights below show what's needed."
+        "Choose the dimension, then tap the level you saw — the note is optional."
       );
-      if (next.context) document.getElementById("context")?.focus();
-      else if (next.whatHappened) document.getElementById("what")?.focus();
       return;
     }
-    setErrors({});
     setSubmitting(true);
     try {
       const res = await fetch("/api/v1/observations", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Idempotency-Key": crypto.randomUUID(),
+        },
         body: JSON.stringify({
           staff_id: staffId,
           observed_at: new Date().toISOString(),
-          context,
-          what_happened: whatHappened,
-          ratings: RATED_DIMENSIONS.map(({ dimension }) => ({
-            dimension,
-            level: ratings[dimension],
-          })),
+          context: "Quick floor capture",
+          what_happened: note.trim(),
+          ratings: [{ dimension, level }],
         }),
       });
       if (!res.ok) throw new Error("Failed to log observation");
-      const data = await res.json();
-      setResult(data);
-      setUnlocked(true);
-      toast.success("Observation logged — practice history unlocked");
+      await res.json();
+      setLoggedName(selectedName);
+      setDimension(null);
+      setLevel(null);
+      setNote("");
+      setAnchorVersion((v) => v + 1);
     } catch {
       toast.error("Could not log the observation. Please retry.");
       setSubmitting(false);
     }
   };
 
-  if (unlocked) {
-    return (
-      <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border bg-card p-10 text-center">
-        <div className="flex size-16 items-center justify-center rounded-full bg-[oklch(0.66_0.11_150)]/15">
-          <LockOpen className="size-8 text-[oklch(0.78_0.1_150)]" />
-        </div>
-        <div>
-          <h2 className="text-xl font-semibold">
-            Your observation is in. Now the AI shows its hand.
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Practice history unlocked — the transfer gap is computed from two
-            independent streams.
-          </p>
-        </div>
-        <div className="flex items-center gap-2 rounded-full bg-accent/40 px-4 py-1.5 text-xs font-medium text-primary">
-          <Sparkles className="size-3.5" />
-          Recommendation {result?.recommendation_id.slice(0, 8)}… is being
-          drafted with citations
-        </div>
-        <div className="flex gap-1.5">
-          <Lock className="size-4 animate-pulse text-[oklch(0.78_0.1_150)]" />
-          <span className="text-xs text-muted-foreground">
-            Taking you to the gap…
-          </span>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-5">
-      <div className="grid gap-2 sm:grid-cols-3">
-        {staff.map((member) => (
-          <button
-            key={member.id}
-            type="button"
-            onClick={() => setStaffId(member.id)}
-            className={`rounded-xl border p-3 text-left transition-colors ${
-              staffId === member.id
-                ? "border-primary bg-accent/30 ring-2 ring-primary/30"
-                : "bg-card hover:bg-muted/40"
-            }`}
-          >
-            <p className="text-sm font-semibold">{member.name}</p>
-            <p className="text-xs text-muted-foreground">
-              {member.role} · {member.department}
+    <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+      <div className="rounded-2xl border bg-card p-5 sm:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          <div className="space-y-1">
+            <h1 className="text-2xl font-semibold tracking-tight">
+              Log a floor observation
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Twenty seconds after the moment, while it&apos;s still yours.
             </p>
-          </button>
-        ))}
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="context">The situation</Label>
-          <Input
-            id="context"
-            placeholder="Guest complaint at front desk, room not ready at 3pm"
-            value={context}
-            onChange={(e) => {
-              setContext(e.target.value);
-              if (errors.context && e.target.value.trim()) {
-                setErrors((er) => ({ ...er, context: undefined }));
-              }
-            }}
-            className={errors.context ? "border-rose-400/60 focus-visible:ring-rose-400/40" : ""}
-          />
-          {errors.context && (
-            <p className="text-xs text-rose-300">{errors.context}</p>
-          )}
+          </div>
+          <div className="flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
+            <Timer className="size-3.5" />
+            ~20s
+          </div>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="what">What happened</Label>
-          <Textarea
-            id="what"
-            placeholder="Froze and escalated to me immediately…"
-            className={`min-h-[68px] ${
-              errors.whatHappened ? "border-rose-400/60 focus-visible:ring-rose-400/40" : ""
-            }`}
-            value={whatHappened}
-            onChange={(e) => {
-              setWhatHappened(e.target.value);
-              if (errors.whatHappened && e.target.value.trim()) {
-                setErrors((er) => ({ ...er, whatHappened: undefined }));
-              }
-            }}
-          />
-          {errors.whatHappened && (
-            <p className="text-xs text-rose-300">{errors.whatHappened}</p>
-          )}
-        </div>
-      </div>
 
-      <div className="space-y-4">
-        {RATED_DIMENSIONS.map(({ dimension, prompt }) => (
-          <div
-            key={dimension}
-            className={`rounded-xl border p-4 ${
-              errors.ratings && ratings[dimension] === null
-                ? "border-rose-400/60 bg-card"
-                : "bg-card"
-            }`}
-          >
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-sm font-medium">
-                {observationDimensionLabels[dimension]}
-              </p>
-              <p className="text-xs text-muted-foreground">{prompt}</p>
-            </div>
-            <div className="mt-3 flex gap-2">
-              {[1, 2, 3, 4, 5].map((level) => (
-                <button
-                  key={level}
-                  type="button"
-                  onClick={() => {
-                    const next = { ...ratings, [dimension]: level };
-                    setRatings(next);
-                    if (
-                      RATED_DIMENSIONS.every(
-                        ({ dimension: d }) => next[d] !== null
-                      )
-                    ) {
-                      setErrors((er) => ({ ...er, ratings: undefined }));
-                    }
-                  }}
-                  className={`flex-1 rounded-lg border py-2.5 text-sm font-bold transition-colors ${
-                    ratings[dimension] === level
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "bg-muted/40 hover:bg-muted"
-                  }`}
-                >
-                  {level}
-                </button>
-              ))}
+        <div className="mt-5 space-y-5 border-t pt-5">
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-muted-foreground">
+              Who did you observe?
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {staff.map((s) => {
+                const selected = s.id === staffId;
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => {
+                      setStaffId(s.id);
+                      beginCapture();
+                    }}
+                    className={`rounded-lg border px-3 py-1.5 text-left transition-colors ${
+                      selected ? CHIP_SELECTED : CHIP_IDLE
+                    }`}
+                  >
+                    <span className="block text-sm font-semibold leading-tight">
+                      {s.name}
+                    </span>
+                    <span
+                      className={`block text-[10px] leading-tight ${
+                        selected
+                          ? "text-primary-foreground/70"
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      {s.role} · {s.department}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
-        ))}
-        {errors.ratings && (
-          <p className="text-xs text-rose-300">{errors.ratings}</p>
-        )}
+
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-muted-foreground">
+              Which dimension?
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {CAPTURE_DIMENSIONS.map((d) => {
+                const selected = dimension === d;
+                return (
+                  <button
+                    key={d}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => {
+                      setDimension(d);
+                      beginCapture();
+                    }}
+                    className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
+                      selected ? CHIP_SELECTED : CHIP_IDLE
+                    }`}
+                  >
+                    {observationDimensionLabels[d]}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-baseline justify-between gap-2">
+              <p className="text-xs font-medium text-muted-foreground">
+                Level — how well they handled it
+              </p>
+              <p className="text-[10px] text-muted-foreground/70">BARS 1–5</p>
+            </div>
+            <div
+              role="radiogroup"
+              aria-label="Level"
+              className="grid grid-cols-5 gap-2"
+            >
+              {LEVELS.map((value) => {
+                const selected = level === value;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    onClick={() => {
+                      setLevel(value);
+                      beginCapture();
+                    }}
+                    className={`rounded-lg border py-2.5 text-sm font-bold transition-colors ${
+                      selected ? CHIP_SELECTED : CHIP_IDLE
+                    }`}
+                  >
+                    {value}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-muted-foreground">
+              Note (optional)
+            </p>
+            <Input
+              placeholder="One line on what you saw"
+              value={note}
+              onChange={(e) => {
+                setNote(e.target.value);
+                beginCapture();
+              }}
+            />
+          </div>
+
+          <div className="space-y-3 pt-1">
+            <div className="flex justify-center">
+              <Button
+                type="button"
+                size="lg"
+                className="w-full sm:w-auto sm:min-w-64"
+                disabled={submitting}
+                onClick={handleSubmit}
+              >
+                {submitting ? "Logging…" : "Log observation"}
+              </Button>
+            </div>
+            {loggedName !== null ? (
+              <div
+                role="status"
+                className="flex items-start justify-center gap-2 rounded-xl border border-primary/25 bg-accent/40 px-4 py-3 text-center"
+              >
+                <LockOpen className="mt-0.5 size-4 shrink-0 text-primary" />
+                <p className="text-sm text-primary">
+                  Logging unlocks {loggedName}&apos;s practice history — your
+                  judgement lands first, the AI&apos;s read second.
+                </p>
+              </div>
+            ) : (
+              <p className="flex items-center justify-center gap-1.5 text-center text-xs text-muted-foreground">
+                <Lock className="size-3 shrink-0" />
+                Practice scores stay hidden until your observation is in — your
+                judgement first, the AI&apos;s read second.
+              </p>
+            )}
+          </div>
+        </div>
       </div>
 
-      <div className="flex flex-col items-center gap-2">
-        <Button
-          size="lg"
-          className="w-full sm:w-auto sm:min-w-64"
-          disabled={submitting}
-          onClick={handleSubmit}
-        >
-          {submitting ? "Logging…" : "Log observation"}
-        </Button>
-        <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Lock className="size-3" />
-          Practice scores stay hidden until your observation is in — your
-          judgement first, the AI's read second.
-        </p>
-      </div>
+      <RecordAnchors name={selectedName} record={record} />
     </div>
+  );
+}
+
+/** The tapped staff member's existing floor observations — date, dimension,
+ * level — so a manager sees what is already logged before judging again. */
+function RecordAnchors({
+  name,
+  record,
+}: {
+  name: string;
+  record: RecordState;
+}) {
+  return (
+    <aside className="rounded-2xl border bg-card p-4 sm:p-5 lg:sticky lg:top-6">
+      <div className="flex items-center gap-2">
+        <span
+          aria-hidden
+          className={`size-2 rounded-full bg-current ${FLOOR_DOT}`}
+        />
+        <p className="text-sm font-semibold">{name}&apos;s floor record</p>
+        {record.kind === "ready" && record.rows.length > 0 && (
+          <span className="ml-auto text-[10px] text-muted-foreground">
+            {record.rows.length} logged · newest first
+          </span>
+        )}
+      </div>
+      <p className="mt-0.5 text-xs text-muted-foreground">
+        Every rated moment already on the record.
+      </p>
+
+      {record.kind === "loading" && (
+        <p className="mt-3 text-xs text-muted-foreground">
+          Reading {name}&apos;s record…
+        </p>
+      )}
+
+      {record.kind === "error" && (
+        <p className="mt-3 rounded-lg border border-dashed p-3 text-xs text-muted-foreground">
+          Could not read the record right now — refresh to retry.
+        </p>
+      )}
+
+      {record.kind === "ready" && record.rows.length === 0 && (
+        <p className="mt-3 rounded-lg border border-dashed p-3 text-xs text-muted-foreground">
+          Nothing on the record for {name} yet — your first capture lands
+          here.
+        </p>
+      )}
+
+      {record.kind === "ready" && record.rows.length > 0 && (
+        <ul className="mt-3 space-y-2">
+          {record.rows.map((row) => (
+            <li
+              key={row.id}
+              className="flex items-center justify-between gap-3 rounded-lg border bg-muted/30 px-3 py-2"
+            >
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium">
+                  {dimensionShort[row.dimension]}
+                </p>
+                <p className="font-mono text-[10px] text-muted-foreground">
+                  {row.recorded_at.slice(0, 10)}
+                </p>
+              </div>
+              <span
+                className={`rounded-md border px-2 py-0.5 text-sm font-bold tabular-nums ${
+                  row.level === null
+                    ? "border-transparent bg-muted text-muted-foreground"
+                    : FLOOR_PILL
+                }`}
+              >
+                {row.level ?? "—"}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </aside>
   );
 }
