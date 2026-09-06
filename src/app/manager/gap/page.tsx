@@ -65,23 +65,25 @@ export default async function GapPage(
 
       {gap ? (
         <>
-          <LastScoresPanel key={staffId} staffId={staffId} />
+          {/* The conclusion card and per-dimension badge rows carry the
+              reading; the radar chart stays below as supporting evidence. */}
           <GapQuadrant gap={gap} staffName={staff?.name ?? "staff member"} />
+          <LastScoresPanel key={staffId} staffId={staffId} />
 
-          <Card className="surface-glow">
+          <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base">
                 Practice vs floor radar —{" "}
                 {(staff?.name ?? "staff member").split(" ")[0]}
               </CardTitle>
               <p className="text-xs text-muted-foreground">
-                Every scored dimension on one chart. Solid = practice
-                (simulation). Dashed = floor (observed). Where the dashed line
-                falls inside the solid one, the floor is trailing practice —
-                that is the transfer gap.
+                Supporting chart — the scored dimensions at a glance. Solid =
+                practice (simulation). Dashed = floor (observed). Where the
+                dashed line falls inside the solid one, the floor is trailing
+                practice — that is the transfer gap.
               </p>
             </CardHeader>
-            <CardContent className="mx-auto w-full max-w-md">
+            <CardContent className="mx-auto w-full max-w-sm">
               <RadarChart
                 axes={AXES}
                 series={[
