@@ -2,7 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Check, RotateCcw, ShieldAlert, X } from "lucide-react";
+import {
+  ArrowRight,
+  Check,
+  ChevronDown,
+  RotateCcw,
+  ShieldAlert,
+  StickyNote,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -51,19 +59,11 @@ interface CalibrationShiftData {
   advice?: string;
 }
 
-const verdictCopy: Record<Verdict, { label: string; hint: string }> = {
-  confirmed: {
-    label: "Confirm",
-    hint: "The read matches what I saw.",
-  },
-  corrected: {
-    label: "Correct",
-    hint: "Close, but the level or the reason needs adjusting.",
-  },
-  rejected: {
-    label: "Reject",
-    hint: "This read does not match the floor.",
-  },
+/** One plain word per verdict — the three choices, no sub-copy. */
+const verdictLabel: Record<Verdict, string> = {
+  confirmed: "Confirm",
+  corrected: "Correct",
+  rejected: "Reject",
 };
 
 export function VerifyPanel({
@@ -75,6 +75,7 @@ export function VerifyPanel({
   const [verdict, setVerdict] = useState<Verdict | null>(null);
   const [managerLevel, setManagerLevel] = useState<number | null>(null);
   const [reason, setReason] = useState("");
+  const [noteOpen, setNoteOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [response, setResponse] = useState<VerifyResponse | null>(null);
   const timerRef = useRef<number | null>(null);
@@ -149,7 +150,7 @@ export function VerifyPanel({
         aria-label="Your verdict"
         className="grid gap-2 sm:grid-cols-3"
       >
-        {(Object.keys(verdictCopy) as Verdict[]).map((v) => (
+        {(Object.keys(verdictLabel) as Verdict[]).map((v) => (
           <button
             key={v}
             type="button"
@@ -166,15 +167,12 @@ export function VerifyPanel({
                 : "bg-card hover:bg-muted/40"
             }`}
           >
-            <span className="flex items-center gap-2 text-base font-semibold">
+            <span className="flex items-center gap-2 text-lg font-semibold">
               {v === "confirmed" && <Check className="size-5 text-[oklch(0.78_0.1_150)]" />}
               {v === "corrected" && <RotateCcw className="size-5 text-amber-300" />}
               {v === "rejected" && <X className="size-5 text-rose-300" />}
-              {verdictCopy[v].label}
+              {verdictLabel[v]}
             </span>
-            <p className="mt-1 text-xs text-muted-foreground">
-              {verdictCopy[v].hint}
-            </p>
           </button>
         ))}
       </div>
@@ -214,16 +212,32 @@ export function VerifyPanel({
         </div>
       )}
 
-      <Textarea
-        placeholder={
-          verdict === "rejected"
-            ? "What did you actually see? This becomes a labelled example for calibration."
-            : "Optional — one line on why. It feeds the calibration."
-        }
-        value={reason}
-        onChange={(e) => setReason(e.target.value)}
-        className="min-h-20"
-      />
+      <button
+        type="button"
+        aria-expanded={noteOpen}
+        aria-controls="verdict-note"
+        onClick={() => setNoteOpen((o) => !o)}
+        className="flex w-fit items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <StickyNote className="size-4" />
+        Add a note (optional)
+        <ChevronDown
+          className={`size-4 transition-transform ${noteOpen ? "rotate-180" : ""}`}
+        />
+      </button>
+      {noteOpen && (
+        <Textarea
+          id="verdict-note"
+          placeholder={
+            verdict === "rejected"
+              ? "What did you actually see? This becomes a labelled example for calibration."
+              : "Optional — one line on why. It feeds the calibration."
+          }
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          className="min-h-20"
+        />
+      )}
 
       <Button
         onClick={handleSubmit}
@@ -233,10 +247,6 @@ export function VerifyPanel({
       >
         {submitting ? "Recording…" : "Submit verdict"}
       </Button>
-      <p className="text-center text-xs text-muted-foreground">
-        No coaching action is taken on AI output alone — your verdict is
-        required before anything routes anywhere.
-      </p>
     </div>
   );
 }

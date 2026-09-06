@@ -14,6 +14,9 @@ interface RadarChartProps {
   series: RadarSeries[];
   max?: number;
   caption?: string;
+  /** Hide the numeric value labels at each axis point — the chart's picture
+   * stays, the numbers go. Defaults to showing them. */
+  showValues?: boolean;
 }
 
 const W = 320;
@@ -28,6 +31,7 @@ export function RadarChart({
   series,
   max = 5,
   caption,
+  showValues = true,
 }: RadarChartProps) {
   const angleFor = (i: number) => (Math.PI * 2 * i) / axes.length - Math.PI / 2;
 
@@ -161,17 +165,19 @@ export function RadarChart({
                   className="pop-in"
                   style={{ animationDelay: `${1100 + i * 90}ms` }}
                 />
-                <text
-                  x={lp.x}
-                  y={lp.y}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  fontSize={9.5}
-                  fill={primary.color}
-                  className="tabular-nums"
-                >
-                  {v.toFixed(1)}
-                </text>
+                {showValues && (
+                  <text
+                    x={lp.x}
+                    y={lp.y}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    fontSize={9.5}
+                    fill={primary.color}
+                    className="tabular-nums"
+                  >
+                    {v.toFixed(1)}
+                  </text>
+                )}
               </g>
             );
           })}

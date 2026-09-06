@@ -32,9 +32,7 @@ export function RecommendationCard({
 }: {
   recommendation: Recommendation;
 }) {
-  const [openCitation, setOpenCitation] = useState<string | null>(
-    recommendation.citations[0]?.source_ref ?? null
-  );
+  const [openCitation, setOpenCitation] = useState<string | null>(null);
 
   return (
     <Card>

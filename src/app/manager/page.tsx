@@ -3,23 +3,20 @@ import {
   ArrowRight,
   ClipboardCheck,
   ListChecks,
-  ShieldCheck,
   TrendingUp,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CountUp } from "@/components/count-up";
 import { RadarChart } from "@/components/ui/radar-chart";
+import {
+  CalibrationCard,
+  type CalibrationSummary,
+} from "@/features/manager-console/components/calibration-card";
+import { RadarCaption } from "@/features/manager-console/components/radar-caption";
 import { managerApi } from "@/features/manager-console/api/managerApi";
 import { staffMembers } from "@/lib/mock/seed";
 import { dimensionLabels, dimensionShort } from "@/lib/format";
-import type {
-  BarsDimension,
-  CalibrationReading,
-  CalibrationState,
-  TransferGap,
-} from "@/lib/types";
+import type { BarsDimension, CalibrationReading, TransferGap } from "@/lib/types";
 
 const AXES = Object.keys(dimensionLabels) as BarsDimension[];
 
@@ -49,16 +46,14 @@ const initialsFor = (staffId: string): string => {
   return fromWords || "?";
 };
 
+/** Queue rows lead with the person, not the metadata. */
+const nameFor = (staffId: string): string =>
+  staffMembers.find((s) => s.id === staffId)?.name ?? "Staff member";
+
 /** Aggregate row some backends may add across dimensions (the frozen contract
  * leaves it to the reading list; when absent, take the mean of the rated
  * dimensions so the manager always sees one overall percentage). */
-function overallCalibration(rows: CalibrationReading[]): {
-  rate: number | null;
-  sampleSize: number;
-  dimensionCount: number;
-  state: CalibrationState | null;
-  advice: string | null;
-} | null {
+function overallCalibration(rows: CalibrationReading[]): CalibrationSummary | null {
   if (rows.length === 0) return null;
   const aggregate = rows.find(
     (r) => (r.dimension as string) === "overall"
@@ -87,16 +82,6 @@ function overallCalibration(rows: CalibrationReading[]): {
     advice: null,
   };
 }
-
-/** One plain sentence per state — shown when the reading list carries no
- * advice of its own (LLD-D §5.3: managers read percentages, not scores). */
-const stateSentence: Record<CalibrationState, string> = {
-  unmeasured: "Not measured yet on this dimension.",
-  provisional: "Early days — only a handful of checks so far.",
-  reliable: "Agreement is reliably high on this dimension.",
-  uncertain: "Still settling — keep verifying on this dimension.",
-  unreliable: "Treat this read with caution for now.",
-};
 
 export default async function ManagerOverviewPage() {
   const [recommendations, readings, insights, gaps] = await Promise.all([
@@ -186,13 +171,11 @@ export default async function ManagerOverviewPage() {
                   dashed: true,
                 },
               ]}
-              caption={`Scale 0–5 · means across ${teamGaps.length} staff with observations${
-                emptyDims.length > 0
-                  ? ` · no transfer-gap evidence yet for ${emptyDims
-                      .map((d) => dimensionShort[d])
-                      .join(" and ")}`
-                  : ""
-              }`}
+              showValues={false}
+            />
+            <RadarCaption
+              observedStaffCount={teamGaps.length}
+              emptyDimensions={emptyDims.map((d) => dimensionShort[d])}
             />
           </CardContent>
         </Card>
@@ -225,44 +208,7 @@ export default async function ManagerOverviewPage() {
             </CardContent>
           </Card>
 
-          <Card className="fade-up [animation-delay:240ms]">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm">
-                <ShieldCheck className="size-4 text-primary" />
-                Calibration — overall agreement
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold tabular-nums">
-                {calibration && calibration.rate !== null ? (
-                  <>
-                    <CountUp value={calibration.rate * 100} decimals={1} />
-                    %
-                  </>
-                ) : (
-                  "—"
-                )}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {calibration
-                  ? `mean across ${calibration.dimensionCount} dimensions · n = ${calibration.sampleSize}`
-                  : "no verified verdicts yet"}
-              </p>
-              {calibration?.advice && (
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {calibration.advice}
-                </p>
-              )}
-              {calibration?.state && calibration.state !== "unmeasured" && (
-                <p className="mt-1 text-xs font-medium text-primary">
-                  {stateSentence[calibration.state]}
-                </p>
-              )}
-              <p className="mt-1 text-xs text-muted-foreground">
-                Watch the calibration number move — live.
-              </p>
-            </CardContent>
-          </Card>
+          <CalibrationCard summary={calibration} />
 
           <Card className="fade-up [animation-delay:360ms]">
             <CardHeader className="pb-2">
@@ -276,9 +222,8 @@ export default async function ManagerOverviewPage() {
                 {insights.patterns.length}
               </p>
               <p className="text-xs text-muted-foreground">
-                k-anonymised ·{" "}
-                {insights.suppressed.reduce((a, s) => a + s.count, 0)}{" "}
-                suppressed
+                Hidden until at least {insights.k_threshold} staff share a
+                pattern.
               </p>
               <Button
                 variant="link"
@@ -308,14 +253,13 @@ export default async function ManagerOverviewPage() {
                 {initialsFor(rec.staff_id)}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">{rec.headline}</p>
-                <p className="text-xs text-muted-foreground">
-                  {rec.citations.length} cited claims · {rec.classification}
+                <p className="truncate text-sm font-semibold">
+                  {nameFor(rec.staff_id)}
+                </p>
+                <p className="truncate text-sm leading-snug text-muted-foreground">
+                  {rec.headline}
                 </p>
               </div>
-              <Badge variant="outline">
-                {rec.classification === "policy" ? "Policy" : "Behavioural"}
-              </Badge>
               <ArrowRight className="size-4 text-muted-foreground" />
             </Link>
           ))}
