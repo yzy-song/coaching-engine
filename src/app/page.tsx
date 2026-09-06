@@ -51,7 +51,7 @@ const stats: { value: number | string; suffix?: string; label: string }[] = [
   { value: 2, label: "independent data streams — practice and floor" },
   { value: 0, label: "actions route without a human verdict" },
   { value: 100, suffix: "%", label: "of claims cite a source you can open" },
-  { value: "k ≥ 3", label: "anonymity on every team insight" },
+  { value: "k ≥ 5", label: "anonymity on every team insight" },
 ];
 
 const narrative = [

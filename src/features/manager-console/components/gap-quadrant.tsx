@@ -33,8 +33,6 @@ const dimCode: Record<string, string> = {
   anticipation: "ANT",
   communication: "COM",
   composure: "CMP",
-  confidence: "CONF",
-  upselling: "UP",
 };
 
 const toneColor: Record<string, string> = {

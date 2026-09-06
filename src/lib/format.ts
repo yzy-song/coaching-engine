@@ -15,8 +15,6 @@ export const dimensionLabels: Record<BarsDimension, string> = {
 
 export const observationDimensionLabels: Record<ObservationDimension, string> = {
   ...dimensionLabels,
-  confidence: "Confidence",
-  upselling: "Upselling",
 };
 
 export const dimensionShort: Record<BarsDimension, string> = {

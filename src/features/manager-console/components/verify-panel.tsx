@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Check, RotateCcw, ShieldAlert, Timer, X } from "lucide-react";
+import { ArrowRight, Check, RotateCcw, ShieldAlert, X } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -53,6 +53,10 @@ export function VerifyPanel({
     };
   }, []);
 
+  useEffect(() => {
+    if (response && timerRef.current) window.clearInterval(timerRef.current);
+  }, [response]);
+
   const handleSubmit = async () => {
     if (submitting) return;
     if (!verdict) {
@@ -99,21 +103,11 @@ export function VerifyPanel({
   };
 
   if (response) {
-    return <VerifyResultPanel verdict={response.status} data={response} />;
+    return <VerifyResultPanel verdict={response.status} data={response} seconds={seconds} />;
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between rounded-xl border bg-muted/30 p-3 text-sm">
-        <span className="flex items-center gap-2 text-muted-foreground">
-          <Timer className="size-4" />
-          Decision time
-        </span>
-        <span className="font-mono text-lg font-semibold tabular-nums">
-          {seconds}s
-        </span>
-      </div>
-
       <div
         role="radiogroup"
         aria-label="Your verdict"
@@ -126,7 +120,7 @@ export function VerifyPanel({
             role="radio"
             aria-checked={verdict === v}
             onClick={() => setVerdict(v)}
-            className={`rounded-xl border p-3 text-left transition-all ${
+            className={`rounded-xl border p-4 text-left transition-all ${
               verdict === v
                 ? v === "confirmed"
                   ? "border-[oklch(0.66_0.11_150)] bg-[oklch(0.66_0.11_150)]/10 ring-2 ring-[oklch(0.66_0.11_150)]/20"
@@ -136,10 +130,10 @@ export function VerifyPanel({
                 : "bg-card hover:bg-muted/40"
             }`}
           >
-            <span className="flex items-center gap-2 text-sm font-semibold">
-              {v === "confirmed" && <Check className="size-4 text-[oklch(0.78_0.1_150)]" />}
-              {v === "corrected" && <RotateCcw className="size-4 text-amber-300" />}
-              {v === "rejected" && <X className="size-4 text-rose-300" />}
+            <span className="flex items-center gap-2 text-base font-semibold">
+              {v === "confirmed" && <Check className="size-5 text-[oklch(0.78_0.1_150)]" />}
+              {v === "corrected" && <RotateCcw className="size-5 text-amber-300" />}
+              {v === "rejected" && <X className="size-5 text-rose-300" />}
               {verdictCopy[v].label}
             </span>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -214,9 +208,11 @@ export function VerifyPanel({
 function VerifyResultPanel({
   verdict,
   data,
+  seconds,
 }: {
   verdict: Verdict;
   data: VerifyResponse;
+  seconds: number;
 }) {
   return (
     <div className="space-y-4" aria-live="polite">
@@ -246,7 +242,7 @@ function VerifyResultPanel({
           </p>
           <p className="text-xs text-muted-foreground">
             Stored with your reason. The calibration set now includes this
-            decision.
+            decision. Decided in {seconds}s.
           </p>
         </div>
       </div>

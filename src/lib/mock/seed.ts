@@ -236,8 +236,7 @@ export const diegoObservation: Observation = {
   ratings: [
     { dimension: "service_recovery", level: 2 },
     { dimension: "empathy", level: 3 },
-    { dimension: "confidence", level: 2 },
-    { dimension: "upselling", level: null },
+    { dimension: "composure", level: 2 },
   ],
 };
 
@@ -293,7 +292,7 @@ export const diegoGap: TransferGap = {
       ],
     },
   ],
-  insufficient_evidence: ["upselling"],
+  insufficient_evidence: ["communication", "anticipation"],
 };
 
 // ── Recommendations ─────────────────────────────────────────────────────────
@@ -305,8 +304,8 @@ export const diegoRecommendation: Recommendation = {
   staff_id: "9f2c-diego",
   classification: "policy",
   headline:
-    "This is not a training gap. She does not know what she is authorised to offer without approval.",
-  body: "Diego scored 4/5 on service recovery in practice on 2 September, following the acknowledge-then-offer sequence correctly. On the floor on 10 September she escalated immediately without attempting recovery. The gap is 2.0 and widening. The behaviour she skipped is the one she demonstrated she can perform, which points at authority rather than skill: your Complaint Handling Policy sets no discretionary limit for front desk staff.",
+    "This is not a training gap. They do not know what they are authorised to offer without approval.",
+  body: "Diego scored 4/5 on service recovery in practice on 2 September, following the acknowledge-then-offer sequence correctly. On the floor on 10 September they escalated immediately without attempting recovery. The gap is 2.0 and widening. The behaviour they skipped is the one they demonstrated they can perform, which points at authority rather than skill: your Complaint Handling Policy sets no discretionary limit for front desk staff.",
   suggested_action:
     "Set and communicate a discretionary limit. Do not assign further service recovery practice.",
   calibration: {

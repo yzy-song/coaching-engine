@@ -24,8 +24,8 @@ const RATED_DIMENSIONS: Array<{
     prompt: "Did they validate what the guest actually said?",
   },
   {
-    dimension: "confidence",
-    prompt: "How sure did they seem under pressure?",
+    dimension: "composure",
+    prompt: "What did they actually say under pressure?",
   },
 ];
 
@@ -39,7 +39,7 @@ export function ObservationForm({ staff }: { staff: StaffMember[] }) {
   >({
     service_recovery: null,
     empathy: null,
-    confidence: null,
+    composure: null,
   });
   const [submitting, setSubmitting] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
@@ -106,9 +106,7 @@ export function ObservationForm({ staff }: { staff: StaffMember[] }) {
           ratings: RATED_DIMENSIONS.map(({ dimension }) => ({
             dimension,
             level: ratings[dimension],
-          })).concat([
-            { dimension: "upselling", level: null },
-          ]),
+          })),
         }),
       });
       if (!res.ok) throw new Error("Failed to log observation");

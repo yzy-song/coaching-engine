@@ -12,11 +12,8 @@ export type BarsDimension =
   | "composure"
   | "service_recovery";
 
-/** Extra dimensions managers can rate on the floor (beyond BARS). */
-export type ObservationDimension =
-  | BarsDimension
-  | "confidence"
-  | "upselling";
+/** Floor observation uses the same five BARS dimensions — one vocabulary, no drift. */
+export type ObservationDimension = BarsDimension;
 
 // ── People ───────────────────────────────────────────────────────────────────
 

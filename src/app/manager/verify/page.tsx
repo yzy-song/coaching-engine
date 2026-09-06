@@ -3,6 +3,7 @@ import { ArrowRight, Ban, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { managerApi } from "@/features/manager-console/api/managerApi";
+import { staffMembers } from "@/lib/mock/seed";
 
 export const metadata = { title: "Verify queue — Manager Console" };
 
@@ -23,44 +24,34 @@ export default async function VerifyQueuePage() {
       </div>
 
       <div className="space-y-3">
-        {pending.map((rec, i) => (
-          <Link key={rec.id} href={`/manager/verify/${rec.id}`} className="block">
-            <Card
-              className="fade-up transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-muted/30 hover:shadow-[0_10px_30px_-16px_var(--primary)]"
-              style={{ animationDelay: `${i * 90}ms` }}
-            >
-              <CardContent className="flex flex-wrap items-center gap-3 p-4 md:p-5">
-                {i === 0 && (
-                  <Badge className="bg-primary text-primary-foreground">
-                    New
-                  </Badge>
-                )}
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold leading-snug">
-                    {rec.headline}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {rec.citations.length} cited claims · agreement{" "}
-                    {Math.round(rec.calibration.agreement_rate * 100)}% on{" "}
-                    {rec.calibration.dimension.replace("_", " ")} · drafted{" "}
-                    {rec.created_at.slice(5, 10)}
-                  </p>
-                </div>
-                <Badge
-                  variant="outline"
-                  className={
-                    rec.classification === "policy"
-                      ? "border-rose-400/30 bg-rose-500/10 text-rose-300"
-                      : "border-amber-400/30 bg-amber-500/10 text-amber-300"
-                  }
-                >
-                  {rec.classification}
-                </Badge>
-                <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
+        {pending.map((rec, i) => {
+          const staff = staffMembers.find((s) => s.id === rec.staff_id);
+          return (
+            <Link key={rec.id} href={`/manager/verify/${rec.id}`} className="block">
+              <Card
+                className="fade-up transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-muted/30 hover:shadow-[0_10px_30px_-16px_var(--primary)]"
+                style={{ animationDelay: `${i * 90}ms` }}
+              >
+                <CardContent className="flex flex-wrap items-center gap-3 p-4 md:p-5">
+                  {i === 0 && (
+                    <Badge className="bg-primary text-primary-foreground">
+                      New
+                    </Badge>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold">
+                      {staff?.name ?? "Staff member"}
+                    </p>
+                    <p className="mt-0.5 text-sm leading-snug text-muted-foreground">
+                      {rec.headline}
+                    </p>
+                  </div>
+                  <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
+                </CardContent>
+              </Card>
+            </Link>
+          );
+        })}
 
         {abstained.map((rec) => (
           <Card key={rec.id} className="border-dashed">

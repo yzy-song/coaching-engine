@@ -2,8 +2,8 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { RecommendationCard } from "@/features/manager-console/components/recommendation-card";
 import { VerifyPanel } from "@/features/manager-console/components/verify-panel";
+import { WhyExplainer } from "@/features/manager-console/components/why-explainer";
 import { managerApi } from "@/features/manager-console/api/managerApi";
 import { staffMembers } from "@/lib/mock/seed";
 
@@ -46,12 +46,15 @@ export default async function VerifyDetailPage(
       </div>
 
       <div className="fade-up [animation-delay:120ms]">
-        <RecommendationCard recommendation={recommendation} />
+        <p className="text-lg font-medium leading-snug md:text-xl">
+          {recommendation.headline}
+        </p>
       </div>
 
       {recommendation.status === "pending_verify" ? (
-        <div className="fade-up [animation-delay:240ms]">
+        <div className="fade-up [animation-delay:240ms] space-y-4">
           <VerifyPanel recommendation={recommendation} />
+          <WhyExplainer recommendation={recommendation} />
         </div>
       ) : (
         <p className="rounded-xl border bg-muted/30 p-4 text-center text-sm text-muted-foreground">
