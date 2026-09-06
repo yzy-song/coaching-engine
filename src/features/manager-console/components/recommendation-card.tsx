@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BookOpen, ChevronDown, MessageSquareQuote, Radar, ClipboardList } from "lucide-react";
+import { BookOpen, ChevronDown, MessageSquareQuote, Radar, ClipboardList, Target } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,7 +12,13 @@ const citationIcons: Record<Citation["kind"], typeof MessageSquareQuote> = {
   attempt_turn: MessageSquareQuote,
   observation: ClipboardList,
   sop_chunk: BookOpen,
+  rubric_anchor: Target,
   metric: Radar,
+};
+
+/** Label fallback for kinds the shared formatter has not been taught yet. */
+const citationKindFallback: Partial<Record<Citation["kind"], string>> = {
+  rubric_anchor: "Rubric anchor",
 };
 
 const classificationTone: Record<string, string> = {
@@ -98,7 +104,9 @@ export function RecommendationCard({
                     {citation.claim}
                   </span>
                   <Badge variant="outline" className="hidden sm:inline-flex">
-                    {citationKindLabel[citation.kind]}
+                    {citationKindLabel[citation.kind] ??
+                      citationKindFallback[citation.kind] ??
+                      citation.kind.replace("_", " ")}
                   </Badge>
                   <ChevronDown
                     className={`size-4 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`}

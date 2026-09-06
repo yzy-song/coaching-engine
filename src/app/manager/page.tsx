@@ -14,12 +14,92 @@ import { RadarChart } from "@/components/ui/radar-chart";
 import { managerApi } from "@/features/manager-console/api/managerApi";
 import { staffMembers } from "@/lib/mock/seed";
 import { dimensionLabels, dimensionShort } from "@/lib/format";
-import type { BarsDimension, TransferGap } from "@/lib/types";
+import type {
+  BarsDimension,
+  CalibrationReading,
+  CalibrationState,
+  TransferGap,
+} from "@/lib/types";
 
 const AXES = Object.keys(dimensionLabels) as BarsDimension[];
 
+const MONTH_SHORT = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
+
+/** "Aug 29" from an ISO created_at, read in UTC — the same day-label style
+ * the results pages use, so the queue card ages honestly with real data. */
+function dayLabel(isoDate: string): string {
+  const date = new Date(isoDate);
+  return Number.isNaN(date.getTime())
+    ? isoDate.slice(0, 10)
+    : `${MONTH_SHORT[date.getUTCMonth()]} ${date.getUTCDate()}`;
+}
+
+/** Avatar initials come from the roster (seed) so a roster change flows
+ * through the whole queue without touching this page. */
+const initialsFor = (staffId: string): string => {
+  const member = staffMembers.find((s) => s.id === staffId);
+  if (!member) return "?";
+  const fromWords = member.name
+    .split(" ")
+    .map((part) => part[0])
+    .join("");
+  return fromWords || "?";
+};
+
+/** Aggregate row some backends may add across dimensions (the frozen contract
+ * leaves it to the reading list; when absent, take the mean of the rated
+ * dimensions so the manager always sees one overall percentage). */
+function overallCalibration(rows: CalibrationReading[]): {
+  rate: number | null;
+  sampleSize: number;
+  dimensionCount: number;
+  state: CalibrationState | null;
+  advice: string | null;
+} | null {
+  if (rows.length === 0) return null;
+  const aggregate = rows.find(
+    (r) => (r.dimension as string) === "overall"
+  );
+  if (aggregate) {
+    return {
+      rate: aggregate.agreement_rate,
+      sampleSize: aggregate.sample_size,
+      dimensionCount: Math.max(rows.length - 1, 0),
+      state: aggregate.state,
+      advice: aggregate.advice,
+    };
+  }
+  const rated = rows.filter(
+    (r): r is CalibrationReading & { agreement_rate: number } =>
+      r.agreement_rate !== null
+  );
+  if (rated.length === 0) return null;
+  const mean =
+    rated.reduce((sum, r) => sum + r.agreement_rate, 0) / rated.length;
+  return {
+    rate: mean,
+    sampleSize: rows.reduce((sum, r) => sum + r.sample_size, 0),
+    dimensionCount: rated.length,
+    state: null,
+    advice: null,
+  };
+}
+
+/** One plain sentence per state — shown when the reading list carries no
+ * advice of its own (LLD-D §5.3: managers read percentages, not scores). */
+const stateSentence: Record<CalibrationState, string> = {
+  unmeasured: "Not measured yet on this dimension.",
+  provisional: "Early days — only a handful of checks so far.",
+  reliable: "Agreement is reliably high on this dimension.",
+  uncertain: "Still settling — keep verifying on this dimension.",
+  unreliable: "Treat this read with caution for now.",
+};
+
 export default async function ManagerOverviewPage() {
-  const [recommendations, calibration, insights, gaps] = await Promise.all([
+  const [recommendations, readings, insights, gaps] = await Promise.all([
     managerApi.listRecommendations(),
     managerApi.getCalibration(),
     managerApi.getTeamInsights(),
@@ -29,11 +109,17 @@ export default async function ManagerOverviewPage() {
   const pending = recommendations.filter(
     (r) => r.status === "pending_verify"
   );
-  const recovery = calibration.dimensions.find(
-    (d) => d.dimension === "service_recovery"
-  );
+  const oldestPending =
+    pending.length > 0
+      ? pending.reduce((oldest, rec) =>
+          rec.created_at < oldest.created_at ? rec : oldest
+        )
+      : null;
+  const calibration = overallCalibration(readings);
 
-  const teamGaps = gaps.filter((g): g is TransferGap => g !== undefined);
+  const teamGaps = gaps.filter(
+    (g): g is TransferGap => g !== undefined && g.dimensions.length > 0
+  );
   const teamPractice: Partial<Record<BarsDimension, number | null>> = {};
   const teamFloor: Partial<Record<BarsDimension, number | null>> = {};
   for (const dim of AXES) {
@@ -78,7 +164,8 @@ export default async function ManagerOverviewPage() {
             </CardTitle>
             <p className="text-xs text-muted-foreground">
               Practice mean vs what you saw on the floor, per dimension. Where
-              the polygon shrinks, the floor is the problem.
+              the dashed floor line dips inside the solid practice line, that
+              dimension is the transfer gap.
             </p>
           </CardHeader>
           <CardContent>
@@ -99,7 +186,7 @@ export default async function ManagerOverviewPage() {
                   dashed: true,
                 },
               ]}
-              caption={`Scale 0–5 · means across ${teamGaps.length} staff${
+              caption={`Scale 0–5 · means across ${teamGaps.length} staff with observations${
                 emptyDims.length > 0
                   ? ` · no transfer-gap evidence yet for ${emptyDims
                       .map((d) => dimensionShort[d])
@@ -123,7 +210,9 @@ export default async function ManagerOverviewPage() {
                 {pending.length}
               </p>
               <p className="text-xs text-muted-foreground">
-                pending · oldest from yesterday
+                {oldestPending
+                  ? `pending · oldest from ${dayLabel(oldestPending.created_at)}`
+                  : "pending · nothing waiting"}
               </p>
               <Button
                 variant="link"
@@ -140,22 +229,37 @@ export default async function ManagerOverviewPage() {
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-sm">
                 <ShieldCheck className="size-4 text-primary" />
-                Calibration — service recovery
+                Calibration — overall agreement
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-3xl font-bold tabular-nums">
-                {recovery ? (
-                  <CountUp value={recovery.agreement_rate} decimals={3} />
+                {calibration && calibration.rate !== null ? (
+                  <>
+                    <CountUp value={calibration.rate * 100} decimals={1} />
+                    %
+                  </>
                 ) : (
                   "—"
                 )}
               </p>
               <p className="text-xs text-muted-foreground">
-                agreement with managers · n = {recovery?.sample_size}
+                {calibration
+                  ? `mean across ${calibration.dimensionCount} dimensions · n = ${calibration.sampleSize}`
+                  : "no verified verdicts yet"}
               </p>
+              {calibration?.advice && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {calibration.advice}
+                </p>
+              )}
+              {calibration?.state && calibration.state !== "unmeasured" && (
+                <p className="mt-1 text-xs font-medium text-primary">
+                  {stateSentence[calibration.state]}
+                </p>
+              )}
               <p className="mt-1 text-xs text-muted-foreground">
-                Moves live every time you verify.
+                Watch the calibration number move — live.
               </p>
             </CardContent>
           </Card>
@@ -201,11 +305,7 @@ export default async function ManagerOverviewPage() {
               className="flex items-center gap-3 rounded-xl border p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-muted/40 hover:shadow-[0_10px_30px_-16px_var(--primary)]"
             >
               <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground">
-                {rec.id.includes("diego")
-                  ? "DA"
-                  : rec.id.includes("ciaran")
-                    ? "CD"
-                    : "EW"}
+                {initialsFor(rec.staff_id)}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{rec.headline}</p>

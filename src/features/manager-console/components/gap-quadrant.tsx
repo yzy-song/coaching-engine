@@ -323,11 +323,15 @@ export function GapQuadrant({
                   <p className="text-lg font-bold">{active.floor_mean.toFixed(1)}</p>
                   <p className="text-muted-foreground">n = {active.floor_n}</p>
                 </div>
-                <div className="ml-auto flex items-center gap-1 text-muted-foreground">
-                  <TrendingUp className="size-3.5" />
-                  {active.trend.map((t) => t.gap).join(" → ")}
-                  <ArrowUpRight className="size-3.5 text-rose-400" />
-                </div>
+                {/* A slope is only claimed from ≥ 3 weekly points (LLD-D §4.4);
+                    fewer than that and the trend label is withheld. */}
+                {active.trend.length >= 3 && (
+                  <div className="ml-auto flex items-center gap-1 text-muted-foreground">
+                    <TrendingUp className="size-3.5" />
+                    {active.trend.map((t) => t.gap).join(" → ")}
+                    <ArrowUpRight className="size-3.5 text-rose-400" />
+                  </div>
+                )}
               </div>
             </div>
           )}

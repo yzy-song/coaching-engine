@@ -1,38 +1,56 @@
 import Link from "next/link";
 import { ArrowRight, Eye, Lock } from "lucide-react";
-import { diegoScoreResult } from "@/lib/mock/seed";
+import {
+  completedAttempt,
+  diegoObservation,
+  historyAug26Attempt,
+  historyAug29Attempt,
+  scenarios,
+} from "@/lib/mock/seed";
 import { dimensionShort } from "@/lib/format";
 
-const history = [
-  {
-    date: "Sep 2",
-    title: "Late check-in complaint",
-    id: "8a4e-diego",
-    scores: diegoScoreResult.scores,
-    managerViewed: true,
-  },
-  {
-    date: "Aug 29",
-    title: "The forgotten anniversary",
-    id: "3f7b-aug29",
-    scores: [
-      { dimension: "anticipation" as const, level: 3 },
-      { dimension: "communication" as const, level: 3 },
-      { dimension: "empathy" as const, level: 4 },
-    ],
-    managerViewed: true,
-  },
-  {
-    date: "Aug 26",
-    title: "Noise complaint at midnight",
-    id: "4c8d-aug26",
-    scores: [
-      { dimension: "composure" as const, level: 4 },
-      { dimension: "communication" as const, level: 2 },
-    ],
-    managerViewed: false,
-  },
+const MONTH_SHORT = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 ];
+
+/** "Aug 30" from a result's ISO completed_at, read in UTC. */
+function dayLabel(isoDate: string): string {
+  const date = new Date(isoDate);
+  return Number.isNaN(date.getTime())
+    ? isoDate.slice(0, 10)
+    : `${MONTH_SHORT[date.getUTCMonth()]} ${date.getUTCDate()}`;
+}
+
+const scenarioTitles = new Map(scenarios.map((s) => [s.id, s.title]));
+
+// Rows are the seed's completed practice runs (the actor's real attempts),
+// newest first. Title and date come from each attempt's scenario + result —
+// no invented titles, dates or scores on this page.
+const history = [
+  completedAttempt,
+  historyAug29Attempt,
+  historyAug26Attempt,
+]
+  .flatMap((attempt) => {
+    const result = attempt.result;
+    if (!result) return [];
+    return [
+      {
+        id: attempt.id,
+        title: scenarioTitles.get(result.scenario_id) ?? "Practice run",
+        dateLabel: dayLabel(result.completed_at),
+        completedAt: result.completed_at,
+        scores: result.scores.filter((s) => s.level !== null),
+      },
+    ];
+  })
+  .sort((a, b) => b.completedAt.localeCompare(a.completedAt));
+
+// The mock sequencing gate: a manager observation unlocks the actor's
+// practice history. Diego's obs-001 exists, so every run below is compared
+// against the floor stream.
+const managerObserved = diegoObservation.staff_id === "9f2c-diego";
 
 export default function HistoryPage() {
   return (
@@ -46,11 +64,11 @@ export default function HistoryPage() {
       </div>
 
       <div className="space-y-3">
-        {history.map((entry, i) => (
-          <div key={i} className="rounded-2xl border bg-card p-4">
+        {history.map((entry) => (
+          <div key={entry.id} className="rounded-2xl border bg-card p-4">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold">{entry.title}</p>
-              <span className="text-xs text-muted-foreground">{entry.date}</span>
+              <span className="text-xs text-muted-foreground">{entry.dateLabel}</span>
             </div>
             <div className="mt-2.5 flex flex-wrap gap-2">
               {entry.scores.map(({ dimension, level }) => (
@@ -72,7 +90,7 @@ export default function HistoryPage() {
             </div>
             <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
               <span className="flex items-center gap-1.5">
-                {entry.managerViewed ? (
+                {managerObserved ? (
                   <>
                     <Eye className="size-3.5" />
                     Your manager logged their own observation — this score was

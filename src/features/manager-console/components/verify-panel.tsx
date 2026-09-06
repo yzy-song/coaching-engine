@@ -9,11 +9,47 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { dimensionShort } from "@/lib/format";
 import type {
+  BarsDimension,
+  CalibrationState,
+  EscalationRoute,
   Recommendation,
   VerifyResponse,
 } from "@/lib/types";
 
 type Verdict = "confirmed" | "corrected" | "rejected";
+
+/** Contract route names on screen — ld_hr reads as "LD/HR", never "LD_HR". */
+const routeLabel: Record<EscalationRoute, string> = {
+  manager: "Duty manager",
+  ld_hr: "LD/HR",
+  operations: "Operations / GM",
+};
+
+/** One plain sentence per calibration state — the fallback when the response
+ * carries no advice of its own. */
+const stateSentence: Record<CalibrationState, string> = {
+  unmeasured: "Not measured yet on this dimension.",
+  provisional: "Early days — only a handful of checks so far.",
+  reliable: "Agreement is reliably high on this dimension.",
+  uncertain: "Still settling — keep verifying on this dimension.",
+  unreliable: "Treat this read with caution for now.",
+};
+
+/**
+ * calibration_updated is the contract's Calibration row plus before/after.
+ * Typed locally so this panel tracks the frozen contract while types.ts (owned
+ * elsewhere) still mirrors the previous snapshot.
+ */
+interface CalibrationShiftData {
+  dimension: BarsDimension;
+  agreement_rate_before: number;
+  agreement_rate_after: number;
+  sample_size: number;
+  lower?: number | null;
+  upper?: number | null;
+  state?: CalibrationState;
+  advice?: string;
+}
 
 const verdictCopy: Record<Verdict, { label: string; hint: string }> = {
   confirmed: {
@@ -92,7 +128,7 @@ export function VerifyPanel({
       setResponse(data);
       toast.success(
         data.escalation
-          ? "Confirmed — routed to operations"
+          ? `Confirmed — routed to ${routeLabel[data.escalation.route].toLowerCase()}`
           : `Marked ${verdict}. Calibration updated.`
       );
     } catch {
@@ -182,7 +218,7 @@ export function VerifyPanel({
         placeholder={
           verdict === "rejected"
             ? "What did you actually see? This becomes a labelled example for calibration."
-            : "Optional — one line on why (this trains the calibration)."
+            : "Optional — one line on why. It feeds the calibration."
         }
         value={reason}
         onChange={(e) => setReason(e.target.value)}
@@ -241,8 +277,8 @@ function VerifyResultPanel({
                 : "Rejected — recorded as a labelled example."}
           </p>
           <p className="text-xs text-muted-foreground">
-            Stored with your reason. The calibration set now includes this
-            decision. Decided in {seconds}s.
+            Stored with your reason. This decision now counts toward the
+            calibration. Decided in {seconds}s.
           </p>
         </div>
       </div>
@@ -254,7 +290,7 @@ function VerifyResultPanel({
           <div className="flex items-center gap-2">
             <ShieldAlert className="size-5 text-rose-300" />
             <p className="text-sm font-semibold text-rose-200">
-              Escalated — {data.escalation.route.toUpperCase()} · rule{" "}
+              Escalated — {routeLabel[data.escalation.route]} · rule{" "}
               {data.escalation.rule_id}
             </p>
             <Badge variant="outline" className="ml-auto border-rose-400/40 text-rose-300">
@@ -279,56 +315,75 @@ function VerifyResultPanel({
 }
 
 function CalibrationShift({ data }: { data: VerifyResponse }) {
-  const [display, setDisplay] = useState(data.calibration_updated.agreement_rate_before);
+  const shift: CalibrationShiftData = data.calibration_updated;
+  const fromPct = shift.agreement_rate_before * 100;
+  const toPct = shift.agreement_rate_after * 100;
+  const [displayPct, setDisplayPct] = useState(fromPct);
   const started = useRef(false);
 
   useEffect(() => {
     if (started.current) return;
     started.current = true;
-    const from = data.calibration_updated.agreement_rate_before;
-    const to = data.calibration_updated.agreement_rate_after;
     const start = performance.now();
     const duration = 1200;
 
     const tick = (now: number) => {
       const t = Math.min((now - start) / duration, 1);
       const eased = 1 - Math.pow(1 - t, 3);
-      setDisplay(from + (to - from) * eased);
+      setDisplayPct(fromPct + (toPct - fromPct) * eased);
       if (t < 1) requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
-  }, [data]);
+  }, [fromPct, toPct]);
 
-  const pct = Math.round(
-    ((display - data.calibration_updated.agreement_rate_before) /
-      (data.calibration_updated.agreement_rate_after -
-        data.calibration_updated.agreement_rate_before)) *
-      100
-  );
+  // Fill of the progress bar tracks travel from before → after; when the rate
+  // is unchanged the bar simply sits full.
+  const travel =
+    fromPct === toPct
+      ? 100
+      : Math.min(
+          Math.max(((displayPct - fromPct) / (toPct - fromPct)) * 100, 0),
+          100
+        );
+
+  const hasInterval =
+    typeof shift.lower === "number" && typeof shift.upper === "number";
+  const stateNote =
+    shift.advice ??
+    (shift.state && shift.state !== "unmeasured"
+      ? stateSentence[shift.state]
+      : null);
 
   return (
     <div className="rounded-xl border bg-card p-5 text-center">
       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        Manager agreement on{" "}
-        {dimensionShort[data.calibration_updated.dimension]} — live
+        Manager agreement on {dimensionShort[shift.dimension]} — live
       </p>
       <p
         aria-live="off"
         className="mt-2 font-mono text-4xl font-bold tabular-nums text-primary"
       >
-        {display.toFixed(3)}
+        {displayPct.toFixed(1)}%
       </p>
       <div className="mx-auto mt-3 h-2 max-w-xs overflow-hidden rounded-full bg-muted">
         <div
           className="h-2 rounded-full bg-primary transition-[width] duration-100"
-          style={{ width: `${Math.max(pct, 6)}%` }}
+          style={{ width: `${Math.max(travel, 6)}%` }}
         />
       </div>
-      <p className="mt-2 text-xs text-muted-foreground">
-        {data.calibration_updated.agreement_rate_before.toFixed(3)} →{" "}
-        {data.calibration_updated.agreement_rate_after.toFixed(3)} · sample
-        grew to n = {data.calibration_updated.sample_size}
+      {hasInterval && (
+        <p className="mt-1 font-mono text-[11px] tabular-nums text-muted-foreground">
+          95% CI {((shift.lower ?? 0) * 100).toFixed(1)}%–
+          {((shift.upper ?? 0) * 100).toFixed(1)}%
+        </p>
+      )}
+      <p className="mt-1 text-xs text-muted-foreground">
+        {fromPct.toFixed(1)}% → {toPct.toFixed(1)}% · sample grew to n ={" "}
+        {shift.sample_size}
       </p>
+      {stateNote && (
+        <p className="mt-2 text-xs font-medium text-primary">{stateNote}</p>
+      )}
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { BarChart3, ClipboardCheck, ListChecks, Sparkles, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { currentManager } from "@/lib/mock/seed";
 
 const nav = [
   { href: "/manager", label: "Overview", icon: Sparkles },
@@ -76,9 +77,11 @@ export function ConsoleShell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
         <div className="border-t px-5 py-4">
-          <p className="text-sm font-medium">Marta Murphy</p>
+          {/* Identity follows seed.ts's currentManager (staff-014) — no copy
+              of the manager's name or property hardcoded in the shell. */}
+          <p className="text-sm font-medium">{currentManager.name}</p>
           <p className="text-xs text-muted-foreground">
-            Duty Manager · The Meridian, Dublin
+            {currentManager.role} · {currentManager.property}
           </p>
         </div>
       </aside>

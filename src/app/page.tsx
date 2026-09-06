@@ -18,6 +18,26 @@ import { Badge } from "@/components/ui/badge";
 import { CountUp } from "@/components/count-up";
 import { Reveal } from "@/components/reveal";
 import { ScrollProgress } from "@/components/scroll-progress";
+import {
+  currentManager,
+  diegoDebrief,
+  diegoObservation,
+  diegoScoreResult,
+  staffMembers,
+} from "@/lib/mock/seed";
+
+const MONTH_SHORT = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
+
+/** "Aug 29" from an ISO timestamp, read in UTC so seeded dates never shift. */
+function dayLabel(isoDate: string): string {
+  const date = new Date(isoDate);
+  return Number.isNaN(date.getTime())
+    ? isoDate.slice(0, 10)
+    : `${MONTH_SHORT[date.getUTCMonth()]} ${date.getUTCDate()}`;
+}
 
 const loopSteps = [
   {
@@ -33,7 +53,7 @@ const loopSteps = [
   {
     icon: BookOpen,
     title: "Remember",
-    text: "Every claim carries its source: the SOP clause, the staff member's own turn, the observation that saw it.",
+    text: "Every claim carries its source: the SOP clause, the staff member's own words, the manager who saw it.",
   },
   {
     icon: ShieldCheck,
@@ -61,6 +81,24 @@ const narrative = [
   "Nothing routes without a human verdict",
   "Calibration moves with every confirm",
   "Staff see every record about them",
+];
+
+// The three citation chips show real seeded anchors, not invented ones: the
+// SOP chunk behind Diego's debrief, his quoted practice turn, and Marta's
+// 29 August observation of the check-in.
+const citationExamples = [
+  {
+    icon: BookOpen,
+    text: `SOP · ${diegoDebrief.standard?.document ?? "complaint standard"} §${diegoDebrief.standard?.step_number ?? 1}`,
+  },
+  {
+    icon: MessageSquareQuote,
+    text: `Practice · ${staffMembers.find((s) => s.id === "9f2c-diego")?.name ?? "Diego"}'s turn ${diegoScoreResult.evidence[0]?.turn_index ?? 5}`,
+  },
+  {
+    icon: Eye,
+    text: `Observation · ${dayLabel(diegoObservation.observed_at)}, ${currentManager.name}`,
+  },
 ];
 
 export default function LandingPage() {
@@ -217,8 +255,8 @@ export default function LandingPage() {
               Observe → Reason → Remember → Verify → Calibrate
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground">
-              Not a static training tool — an agentic loop where the system
-              gets sharper with every verdict a manager gives.
+              Not a one-off training course — a loop that improves every time
+              a manager gives a verdict.
             </p>
           </Reveal>
           <div className="mt-10 grid gap-3 md:grid-cols-5">
@@ -305,17 +343,13 @@ export default function LandingPage() {
                   Open any citation and see the exact evidence behind it.
                 </p>
                 <div className="mt-4 space-y-2">
-                  {[
-                    { icon: BookOpen, text: "SOP · complaint_policy_v2 §3.1" },
-                    { icon: MessageSquareQuote, text: "Practice · Diego's turn 5" },
-                    { icon: Eye, text: "Observation · Sep 2, Marta" },
-                  ].map(({ icon: Icon, text }) => (
+                  {citationExamples.map(({ icon: Icon, text }) => (
                     <div
                       key={text}
                       className="flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2"
                     >
                       <Icon className="size-3.5 shrink-0 text-primary" />
-                      <span className="truncate font-mono text-[11px] text-muted-foreground">
+                      <span className="min-w-0 truncate font-mono text-[11px] text-muted-foreground">
                         {text}
                       </span>
                     </div>
@@ -332,8 +366,7 @@ export default function LandingPage() {
                 <p className="mt-3 text-sm font-semibold">Human-in-the-loop</p>
                 <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
                   Nothing routes on AI output alone. Confirm, correct or
-                  reject — and nothing about a staff member is acted on
-                  without their visibility.
+                  reject — and staff can see every record that touches them.
                 </p>
               </div>
             </Reveal>

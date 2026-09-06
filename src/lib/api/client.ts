@@ -25,16 +25,35 @@ export class ContractError extends Error {
   }
 }
 
+/** Methods that write a decision or spend model tokens — the frozen contract
+ * requires an Idempotency-Key on every one, so a double tap on hotel wifi
+ * cannot produce two scoring runs or two calibration entries. */
+const WRITE_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+
+function newIdempotencyKey(): string {
+  const cryptoObj = globalThis.crypto;
+  if (cryptoObj && typeof cryptoObj.randomUUID === "function") {
+    return cryptoObj.randomUUID();
+  }
+  // Non-secure context fallback (contract only requires minLength 8).
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+}
+
 async function request<T>(
   path: string,
   init?: RequestInit
 ): Promise<T> {
+  const method = (init?.method ?? "GET").toUpperCase();
+  const headers = new Headers(init?.headers);
+  headers.set("Content-Type", "application/json; charset=utf-8");
+  if (WRITE_METHODS.has(method) && !headers.has("Idempotency-Key")) {
+    headers.set("Idempotency-Key", newIdempotencyKey());
+  }
+
   const res = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
-    headers: {
-      "Content-Type": "application/json; charset=utf-8",
-      ...init?.headers,
-    },
+    method,
+    headers,
   });
 
   if (!res.ok) {

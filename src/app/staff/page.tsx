@@ -4,8 +4,22 @@ import { DebriefEntry } from "@/features/staff-pwa/components/debrief-entry";
 import { diegoScoreResult } from "@/lib/mock/seed";
 import { dimensionShort } from "@/lib/format";
 
+const MONTH_SHORT = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
+
+/** "Aug 30" from the result's ISO completed_at, read in UTC. */
+function dayLabel(isoDate: string): string {
+  const date = new Date(isoDate);
+  return Number.isNaN(date.getTime())
+    ? isoDate.slice(0, 10)
+    : `${MONTH_SHORT[date.getUTCMonth()]} ${date.getUTCDate()}`;
+}
+
 export default function StaffHomePage() {
   const lastScore = diegoScoreResult;
+  const lastRunDay = dayLabel(diegoScoreResult.completed_at);
 
   return (
     <div className="space-y-5">
@@ -37,7 +51,7 @@ export default function StaffHomePage() {
               </span>
               <p className="flex-1 text-sm">{dimensionShort[dimension]}</p>
               <span className="text-xs text-muted-foreground">
-                Sep 2
+                {lastRunDay}
               </span>
             </div>
           ))}
@@ -55,7 +69,7 @@ export default function StaffHomePage() {
       </div>
 
       <p className="text-center text-[11px] leading-relaxed text-muted-foreground">
-        You can see every record a manager can see about you. Nothing here is
+        Everything your manager sees about you, you see too. Nothing here is
         hidden, and nothing routes to a disciplinary path.
       </p>
     </div>

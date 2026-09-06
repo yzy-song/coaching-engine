@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { GapQuadrant } from "@/features/manager-console/components/gap-quadrant";
+import { LastScoresPanel } from "@/features/manager-console/components/last-scores-panel";
 import { managerApi } from "@/features/manager-console/api/managerApi";
 import { RadarChart } from "@/components/ui/radar-chart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,8 +41,31 @@ export default async function GapPage(
         </p>
       </div>
 
+      {/* Team switcher: one chip per roster member, scrolling horizontally
+          on narrow screens. Active staff gets the primary accent. */}
+      <nav aria-label="Team members" className="flex gap-2 overflow-x-auto pb-1">
+        {staffMembers.map((member) => {
+          const active = member.id === staffId;
+          return (
+            <Link
+              key={member.id}
+              href={`/manager/gap?staff=${member.id}`}
+              aria-current={active ? "page" : undefined}
+              className={`shrink-0 whitespace-nowrap rounded-xl border px-3 py-1.5 text-sm font-medium transition-colors ${
+                active
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
+              }`}
+            >
+              {member.name.split(" ")[0]}
+            </Link>
+          );
+        })}
+      </nav>
+
       {gap ? (
         <>
+          <LastScoresPanel key={staffId} staffId={staffId} />
           <GapQuadrant gap={gap} staffName={staff?.name ?? "staff member"} />
 
           <Card className="surface-glow">
@@ -51,8 +76,9 @@ export default async function GapPage(
               </CardTitle>
               <p className="text-xs text-muted-foreground">
                 Every scored dimension on one chart. Solid = practice
-                (simulation). Dashed = floor (observed). The dashed line
-                sitting inside the solid one is the transfer gap.
+                (simulation). Dashed = floor (observed). Where the dashed line
+                falls inside the solid one, the floor is trailing practice —
+                that is the transfer gap.
               </p>
             </CardHeader>
             <CardContent className="mx-auto w-full max-w-md">
@@ -80,7 +106,9 @@ export default async function GapPage(
         </>
       ) : (
         <p className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
-          No gap data yet — log an observation for this staff member first.
+          No gap data yet for {staff ? staff.name.split(" ")[0] : "this staff member"}{" "}
+          — log a floor observation first; the transfer gap appears once both
+          streams have scores.
         </p>
       )}
     </div>

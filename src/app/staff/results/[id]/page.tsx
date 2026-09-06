@@ -3,7 +3,20 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScoreResults } from "@/features/staff-pwa/components/score-results";
 import { staffApi } from "@/features/staff-pwa/api/staffApi";
-import { diegoScoreResult } from "@/lib/mock/seed";
+import { diegoScoreResult, scenarios } from "@/lib/mock/seed";
+
+const MONTH_SHORT = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
+
+/** "Aug 30" from a result's ISO completed_at, read in UTC. */
+function dayLabel(isoDate: string): string {
+  const date = new Date(isoDate);
+  return Number.isNaN(date.getTime())
+    ? isoDate.slice(0, 10)
+    : `${MONTH_SHORT[date.getUTCMonth()]} ${date.getUTCDate()}`;
+}
 
 export default async function ResultsPage(
   props: PageProps<"/staff/results/[id]">
@@ -12,6 +25,10 @@ export default async function ResultsPage(
   const attempt = await staffApi.getAttempt(id);
   const result =
     attempt?.result ?? (id === "8a4e-diego" ? diegoScoreResult : null);
+  const scenarioId = attempt?.scenario_id ?? result?.scenario_id ?? null;
+  const scenario = scenarioId
+    ? scenarios.find((s) => s.id === scenarioId)
+    : null;
 
   return (
     <div className="space-y-4">
@@ -30,6 +47,12 @@ export default async function ResultsPage(
             Scored once, over the whole conversation — each level points to
             your own words.
           </p>
+          {result && (
+            <p className="mt-0.5 text-[11px] font-medium text-primary">
+              {scenario?.title ?? "Practice run"} ·{" "}
+              {dayLabel(result.completed_at)}
+            </p>
+          )}
         </div>
       </div>
 

@@ -1,16 +1,73 @@
-import { EyeOff, ShieldCheck, Users } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, EyeOff, ShieldCheck, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { managerApi } from "@/features/manager-console/api/managerApi";
 import { classificationMeta, dimensionShort } from "@/lib/format";
+import type { EscalationRoute, TeamPattern } from "@/lib/types";
 
 export const metadata = { title: "Team insights — Manager Console" };
 
-const routeLabel: Record<string, string> = {
+const routeLabel: Record<EscalationRoute, string> = {
   manager: "Duty manager",
-  ld: "L&D",
+  ld_hr: "LD/HR",
   operations: "Operations / GM",
 };
+
+/**
+ * Trend data is not part of the frozen TeamPattern yet — the cohort service
+ * may attach it later. When it does, it arrives in the same weekly-gap shape
+ * the transfer-gap dimensions use (seed.ts), so derive up/down from the first
+ * and last points. Anything unrecognised renders nothing rather than guessing.
+ */
+interface TrendReading {
+  direction: "up" | "down";
+  span: string | null;
+}
+
+function readTrend(pattern: TeamPattern): TrendReading | null {
+  const raw = (pattern as TeamPattern & { trend?: unknown }).trend;
+  if (raw === undefined || raw === null) return null;
+  if (typeof raw === "string") {
+    const direction =
+      raw === "rising" || raw === "up" || raw === "worsening"
+        ? "up"
+        : raw === "falling" || raw === "down" || raw === "improving"
+          ? "down"
+          : null;
+    return direction ? { direction, span: null } : null;
+  }
+  if (typeof raw !== "object") return null;
+  const direction =
+    "direction" in raw &&
+    (raw.direction === "up" || raw.direction === "down")
+      ? raw.direction
+      : null;
+  if (direction) return { direction, span: null };
+  if (Array.isArray(raw) && raw.length >= 2) {
+    const points = raw as Array<{ week?: unknown; gap?: unknown }>;
+    const firstGap = points[0]?.gap;
+    const lastGap = points[points.length - 1]?.gap;
+    if (typeof firstGap !== "number" || typeof lastGap !== "number") {
+      return null;
+    }
+    const direction =
+      lastGap > firstGap + 0.0001
+        ? "up"
+        : lastGap < firstGap - 0.0001
+          ? "down"
+          : null;
+    if (!direction) return null;
+    const weeks = points
+      .map((p) => p.week)
+      .filter((w): w is string => typeof w === "string");
+    return {
+      direction,
+      span:
+        weeks.length >= 2 ? `${weeks[0]}–${weeks[weeks.length - 1]}` : null,
+    };
+  }
+  return null;
+}
 
 export default async function InsightsPage() {
   const insights = await managerApi.getTeamInsights();
@@ -38,39 +95,73 @@ export default async function InsightsPage() {
       </div>
 
       <div className="space-y-4">
-        {insights.patterns.map((pattern, i) => (
-          <Card
-            key={pattern.id}
-            className="fade-up transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[0_10px_30px_-16px_var(--primary)]"
-            style={{ animationDelay: `${200 + i * 100}ms` }}
-          >
-            <CardHeader className="pb-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <CardTitle className="text-base">
-                  {pattern.staff_count} staff ·{" "}
-                  {dimensionShort[pattern.dimension]} ·{" "}
-                  {classificationMeta[pattern.classification].label}
-                </CardTitle>
-                <Badge className="ml-auto bg-primary text-primary-foreground">
-                  → {routeLabel[pattern.route]}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-sm leading-relaxed">{pattern.description}</p>
-              <div className="rounded-xl border border-primary/25 bg-accent/30 p-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-primary">
-                  Suggested action
+        {insights.patterns.map((pattern, i) => {
+          const trend = readTrend(pattern);
+          return (
+            <Card
+              key={pattern.id}
+              className="fade-up transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[0_10px_30px_-16px_var(--primary)]"
+              style={{ animationDelay: `${200 + i * 100}ms` }}
+            >
+              <CardContent className="space-y-4 p-5">
+                {/* Action comes first, not the chart (team decision): the
+                    manager leaves with the one thing to do. */}
+                <div className="rounded-2xl border border-primary/25 bg-primary p-4 text-primary-foreground shadow-[0_8px_30px_-12px_var(--primary)]">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-primary-foreground/80">
+                    Suggested action
+                  </p>
+                  <p className="mt-1 text-base font-semibold leading-snug">
+                    {pattern.suggested_action}
+                  </p>
+                </div>
+
+                <div>
+                  <h2 className="text-sm font-semibold">
+                    {dimensionShort[pattern.dimension]} ·{" "}
+                    {classificationMeta[pattern.classification].label}
+                  </h2>
+                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                    {pattern.description}
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 text-xs">
+                  <span className="flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 font-medium text-muted-foreground">
+                    <Users className="size-3.5" />
+                    {pattern.staff_count} staff
+                  </span>
+                  {trend && (
+                    <span
+                      className={`inline-flex items-center gap-1 rounded-full px-3 py-1 font-semibold ${
+                        trend.direction === "up"
+                          ? "bg-rose-500/15 text-rose-300"
+                          : "bg-amber-500/15 text-amber-300"
+                      }`}
+                    >
+                      {trend.direction === "up" ? (
+                        <ArrowUpRight className="size-3.5" />
+                      ) : (
+                        <ArrowDownRight className="size-3.5" />
+                      )}
+                      {trend.direction === "up"
+                        ? "Trending up"
+                        : "Trending down"}
+                      {trend.span ? ` · ${trend.span}` : ""}
+                    </span>
+                  )}
+                  <Badge className="ml-auto bg-primary text-primary-foreground">
+                    → {routeLabel[pattern.route]}
+                  </Badge>
+                </div>
+
+                <p className="text-xs text-muted-foreground">
+                  {classificationMeta[pattern.classification].hint} Detected{" "}
+                  {pattern.detected_at.slice(0, 10)}.
                 </p>
-                <p className="mt-1 text-sm">{pattern.suggested_action}</p>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {classificationMeta[pattern.classification].hint} Detected{" "}
-                {pattern.detected_at.slice(0, 10)}.
-              </p>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          );
+        })}
 
         {insights.suppressed.map((s) => (
           <div
@@ -79,8 +170,8 @@ export default async function InsightsPage() {
           >
             <EyeOff className="size-4 shrink-0" />
             {s.count} pattern{s.count > 1 ? "s" : ""} hidden — group smaller
-            than {insights.k_threshold} staff, so they can't be shown without
-            identifying someone.
+            than {insights.k_threshold} staff, so they can&apos;t be shown
+            without identifying someone.
           </div>
         ))}
       </div>
