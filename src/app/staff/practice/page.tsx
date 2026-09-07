@@ -23,22 +23,26 @@ export default async function PracticeListPage() {
         <Link
           key={scenario.id}
           href={`/staff/practice/${scenario.id}`}
-          className="block rounded-2xl bg-primary p-4 text-primary-foreground shadow-[0_8px_30px_-12px_var(--primary)]"
+          className="group block rounded-2xl border bg-card p-4"
         >
-          <div className="flex items-center gap-2">
-            <Sparkles className="size-4" />
-            <p className="text-xs font-semibold uppercase tracking-wide opacity-80">
+          <div className="flex items-center gap-3">
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[oklch(0.66_0.055_152)]/15">
+              <Sparkles className="size-4 text-[oklch(0.38_0.055_152)]" />
+            </div>
+            <p className="min-w-0 flex-1 text-xs font-semibold uppercase tracking-wide text-primary">
               Built from your shift
             </p>
-            <Badge className="ml-auto bg-[oklch(0.985_0.01_95)]/20 text-primary-foreground">
+            <Badge className="shrink-0 bg-[oklch(0.66_0.055_152)]/15 text-[oklch(0.38_0.055_152)]">
               {scenario.duration_minutes} min
             </Badge>
           </div>
-          <p className="mt-2 text-base font-semibold">{scenario.title}</p>
-          <p className="mt-0.5 text-xs opacity-80">{scenario.description}</p>
-          <div className="mt-3 flex items-center gap-2 text-xs opacity-80">
+          <p className="mt-3 text-base font-semibold">{scenario.title}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {scenario.description}
+          </p>
+          <div className="mt-3 flex items-center gap-2 text-xs font-medium text-primary">
             <Play className="size-3.5" />
-            Practise it now while it's fresh
+            Practise it now while it&apos;s fresh
           </div>
         </Link>
       ))}

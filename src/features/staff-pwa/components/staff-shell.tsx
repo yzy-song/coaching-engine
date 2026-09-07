@@ -87,7 +87,7 @@ export function StaffShell({ children }: { children: React.ReactNode }) {
                 .join(" · ")}
             </p>
           </div>
-          <div className="ml-auto flex max-w-[46%] shrink-0 items-center justify-end rounded-full bg-[oklch(0.68_0.06_150)]/15 px-2.5 py-1 text-right text-[11px] font-medium leading-tight text-[oklch(0.8_0.07_150)] ring-1 ring-[oklch(0.68_0.06_150)]/30">
+          <div className="ml-auto flex max-w-[46%] shrink-0 items-center justify-end rounded-full bg-[oklch(0.66_0.055_152)]/15 px-2.5 py-1 text-right text-xs font-medium leading-tight text-[oklch(0.38_0.055_152)] ring-1 ring-[oklch(0.55_0.05_150)]/25">
             {growthLabel}
           </div>
         </header>
@@ -104,7 +104,7 @@ export function StaffShell({ children }: { children: React.ReactNode }) {
               <Link
                 key={tab.href}
                 href={tab.href}
-                className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium ${
+                className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-xs font-medium ${
                   active ? "text-primary" : "text-muted-foreground"
                 }`}
               >

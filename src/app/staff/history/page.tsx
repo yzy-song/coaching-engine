@@ -65,9 +65,9 @@ export default function HistoryPage() {
         </p>
       </div>
 
-      <div className="space-y-3">
-        {history.map((entry) => (
-          <div key={entry.id} className="rounded-2xl border bg-card p-4">
+      <div className="overflow-hidden rounded-2xl border bg-card">
+        {history.map((entry, index) => (
+          <div key={entry.id} className={`p-4 ${index > 0 ? "border-t" : ""}`}>
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold">{entry.title}</p>
               <span className="text-xs text-muted-foreground">{entry.dateLabel}</span>

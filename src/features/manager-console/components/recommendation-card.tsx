@@ -22,9 +22,9 @@ const citationKindFallback: Partial<Record<Citation["kind"], string>> = {
 };
 
 const classificationTone: Record<string, string> = {
-  behavioural: "bg-[oklch(0.7_0.08_70)]/10 text-[oklch(0.85_0.07_74)] border-[oklch(0.78_0.07_72)]/30",
-  process: "bg-[oklch(0.58_0.05_120)]/10 text-[oklch(0.8_0.06_120)] border-[oklch(0.58_0.05_120)]/30",
-  policy: "bg-[oklch(0.62_0.09_30)]/10 text-[oklch(0.8_0.08_30)] border-[oklch(0.68_0.09_30)]/30",
+  behavioural: "bg-[oklch(0.76_0.07_74)]/15 text-[oklch(0.45_0.07_72)] border-[oklch(0.76_0.07_74)]/30",
+  process: "bg-[oklch(0.63_0.06_115)]/12 text-[oklch(0.43_0.06_115)] border-[oklch(0.63_0.06_115)]/30",
+  policy: "bg-[oklch(0.66_0.09_30)]/12 text-[oklch(0.45_0.08_30)] border-[oklch(0.66_0.09_30)]/30",
 };
 
 export function RecommendationCard({
@@ -49,7 +49,7 @@ export function RecommendationCard({
               {recommendation.citations.length} cited claims
             </span>
           )}
-          <span className="ml-auto text-[10px] tabular-nums text-muted-foreground">
+          <span className="ml-auto text-xs tabular-nums text-muted-foreground">
             {recommendation.trace_id}
           </span>
         </div>
@@ -115,7 +115,7 @@ export function RecommendationCard({
                     <p className="text-xs leading-relaxed text-muted-foreground">
                       “{citation.quoted_span}”
                     </p>
-                    <p className="mt-1.5 text-[10px] tabular-nums text-muted-foreground/70">
+                    <p className="mt-1.5 text-xs tabular-nums text-muted-foreground/70">
                       {citation.source_ref}
                     </p>
                   </div>

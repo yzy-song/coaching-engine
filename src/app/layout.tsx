@@ -23,7 +23,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`dark ${inter.variable} ${fraunces.variable} antialiased`}
+      className={`${inter.variable} ${fraunces.variable} antialiased`}
     >
       <body className="flex flex-col">
         {children}

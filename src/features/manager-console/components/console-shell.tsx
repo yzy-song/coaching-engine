@@ -41,7 +41,7 @@ export function ConsoleShell({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-dvh">
       <aside className="fixed inset-y-0 left-0 z-20 hidden w-60 flex-col border-r bg-sidebar md:flex">
         <div className="flex items-center gap-2.5 px-5 py-5">
-          <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground shadow-[0_0_18px_-6px_var(--primary)]">
+          <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-primary-foreground shadow-sm">
             C
           </div>
           <div className="leading-tight">
@@ -68,7 +68,7 @@ export function ConsoleShell({ children }: { children: React.ReactNode }) {
                 <item.icon className="size-4 shrink-0" />
                 <span className="flex-1">{item.label}</span>
                 {item.badge && pending !== null && pending > 0 && (
-                  <Badge className="h-5 min-w-5 justify-center rounded-full px-1.5 text-[11px]">
+                  <Badge className="h-5 min-w-5 justify-center rounded-full px-1.5 text-xs">
                     {pending}
                   </Badge>
                 )}
@@ -114,7 +114,7 @@ function MobileNav({
           <Link
             key={item.href}
             href={item.href}
-            className={`relative flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium ${
+            className={`relative flex flex-1 flex-col items-center gap-0.5 py-2.5 text-xs font-medium ${
               active ? "text-primary" : "text-muted-foreground"
             }`}
           >

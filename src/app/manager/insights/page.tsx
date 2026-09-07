@@ -89,7 +89,7 @@ export default async function InsightsPage() {
           Window {insights.window.start} → {insights.window.end}
         </span>
         <span className="flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-muted-foreground">
-          <ShieldCheck className="size-3.5 text-[oklch(0.76_0.07_150)]" />
+          <ShieldCheck className="size-3.5 text-primary" />
           k-anonymity threshold: {insights.k_threshold}
         </span>
       </div>
@@ -100,17 +100,18 @@ export default async function InsightsPage() {
           return (
             <Card
               key={pattern.id}
-              className="fade-up transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[0_10px_30px_-16px_var(--primary)]"
+              className="fade-up transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-sm"
               style={{ animationDelay: `${200 + i * 100}ms` }}
             >
               <CardContent className="space-y-4 p-5">
                 {/* Action comes first, not the chart (team decision): the
                     manager leaves with the one thing to do. */}
-                <div className="rounded-2xl border border-primary/25 bg-primary p-4 text-primary-foreground shadow-[0_8px_30px_-12px_var(--primary)]">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-primary-foreground/80">
+                <div className="rounded-2xl border bg-card p-4">
+                  <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-primary">
+                    <span aria-hidden className="size-2 shrink-0 rounded-sm bg-primary" />
                     Suggested action
                   </p>
-                  <p className="mt-1 text-base font-semibold leading-snug">
+                  <p className="mt-1.5 text-base font-semibold leading-snug">
                     {pattern.suggested_action}
                   </p>
                 </div>
@@ -134,8 +135,8 @@ export default async function InsightsPage() {
                     <span
                       className={`inline-flex items-center gap-1 rounded-full px-3 py-1 font-semibold ${
                         trend.direction === "up"
-                          ? "bg-[oklch(0.62_0.09_30)]/15 text-[oklch(0.8_0.08_30)]"
-                          : "bg-[oklch(0.72_0.08_70)]/15 text-[oklch(0.85_0.07_74)]"
+                          ? "bg-[oklch(0.66_0.09_30)]/12 text-[oklch(0.45_0.08_30)]"
+                          : "bg-[oklch(0.76_0.07_74)]/15 text-[oklch(0.45_0.07_72)]"
                       }`}
                     >
                       {trend.direction === "up" ? (

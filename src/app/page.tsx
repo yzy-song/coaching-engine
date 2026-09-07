@@ -64,12 +64,12 @@ export default function LandingPage() {
 
       <header className="sticky top-0 z-30 border-b bg-background/70 backdrop-blur-md">
         <div className="mx-auto flex max-w-5xl items-center gap-2.5 px-4 py-3.5">
-          <div className="flex size-9 items-center justify-center rounded-xl bg-primary text-sm font-bold text-primary-foreground shadow-[0_0_18px_-6px_var(--primary)]">
+          <div className="flex size-9 items-center justify-center rounded-xl bg-primary text-sm font-bold text-primary-foreground">
             C
           </div>
           <div className="leading-tight">
             <p className="text-sm font-semibold">The Coaching Engine</p>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               Frontline coaching that closes the gap between training and the
               floor
             </p>
@@ -104,7 +104,7 @@ export default function LandingPage() {
           >
             Training shows completion.
             <br />
-            <span className="gradient-x bg-gradient-to-r from-primary via-chart-2 to-chart-4 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-[oklch(0.47_0.055_150)] to-[oklch(0.6_0.07_70)] bg-clip-text text-transparent">
               This shows what changed on the floor.
             </span>
           </h1>
@@ -123,7 +123,7 @@ export default function LandingPage() {
           >
             <Link
               href="/manager"
-              className="glow-pulse inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5 sm:w-auto"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5 sm:w-auto"
             >
               <MonitorSmartphone className="size-4" />
               Open as Marta, Duty Manager
@@ -279,7 +279,7 @@ export default function LandingPage() {
                       className="flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2"
                     >
                       <Icon className="size-3.5 shrink-0 text-primary" />
-                      <span className="min-w-0 truncate text-[11px] tabular-nums text-muted-foreground">
+                      <span className="min-w-0 truncate text-xs tabular-nums text-muted-foreground">
                         {text}
                       </span>
                     </div>
@@ -317,7 +317,7 @@ export default function LandingPage() {
                 <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
                   <div className="h-full w-[86%] rounded-full bg-primary" />
                 </div>
-                <p className="mt-1.5 text-[10px] text-muted-foreground">
+                <p className="mt-1.5 text-xs text-muted-foreground">
                   service recovery · n = 41 after one confirm
                 </p>
               </div>
@@ -353,19 +353,18 @@ export default function LandingPage() {
         {/* ── Final CTA ── */}
         <section className="mx-auto max-w-5xl px-4 pb-24 pt-24">
           <Reveal>
-            <div className="conic-border relative overflow-hidden rounded-3xl p-10 text-center md:p-16">
-              <div className="pointer-events-none absolute -top-24 left-1/2 size-72 -translate-x-1/2 rounded-full bg-primary/20 blur-3xl" />
-              <h2 className="relative text-2xl font-semibold tracking-tight md:text-4xl">
+            <div className="rounded-3xl border bg-card/60 p-10 text-center md:p-16">
+              <h2 className="text-2xl font-semibold tracking-tight md:text-4xl">
                 Walk the demo in five minutes
               </h2>
-              <p className="relative mx-auto mt-3 max-w-md text-sm text-muted-foreground">
+              <p className="mx-auto mt-3 max-w-md text-sm text-muted-foreground">
                 One shift, one gap, one verdict — and a calibration number
                 that moves before your eyes.
               </p>
-              <div className="relative mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <Link
                   href="/manager"
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-[0_8px_30px_-12px_var(--primary)] transition-transform hover:-translate-y-0.5 sm:w-auto"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5 sm:w-auto"
                 >
                   Start with the manager <ArrowRight className="size-4" />
                 </Link>
@@ -376,7 +375,7 @@ export default function LandingPage() {
                   Or live a shift as Diego
                 </Link>
               </div>
-              <p className="relative mt-5 text-[11px] text-muted-foreground">
+              <p className="mt-5 text-xs text-muted-foreground">
                 Seeded demo data · no login needed · nothing routes anywhere
               </p>
             </div>
@@ -398,21 +397,6 @@ function Background() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
       <div className="absolute inset-0 [background-image:linear-gradient(to_right,oklch(0.95_0.015_90/5%)_1px,transparent_1px),linear-gradient(to_bottom,oklch(0.95_0.015_90/5%)_1px,transparent_1px)] [background-size:64px_64px] [mask-image:radial-gradient(ellipse_75%_60%_at_50%_0%,oklch(0.2_0.02_55),transparent)]" />
-      <div className="aurora-drift absolute -top-32 left-1/4 size-[26rem] rounded-full bg-primary/25 opacity-60 blur-3xl dark:opacity-100" />
-      <div
-        className="aurora-drift absolute -top-20 right-[12%] size-96 rounded-full opacity-50 blur-3xl dark:opacity-90"
-        style={{
-          backgroundColor: "oklch(0.64 0.06 40 / 0.42)",
-          animationDelay: "-6s",
-        }}
-      />
-      <div
-        className="aurora-drift absolute top-[42rem] -left-32 size-[30rem] rounded-full opacity-40 blur-3xl dark:opacity-70"
-        style={{
-          backgroundColor: "oklch(0.76 0.06 75 / 0.32)",
-          animationDelay: "-12s",
-        }}
-      />
     </div>
   );
 }

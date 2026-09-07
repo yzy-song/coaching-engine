@@ -23,9 +23,9 @@ const moodLabel: Record<string, string> = {
 
 const moodTone: Record<string, string> = {
   neutral: "bg-muted text-muted-foreground",
-  frustrated: "bg-[oklch(0.7_0.08_70)]/15 text-[oklch(0.89_0.05_76)]",
-  escalating: "bg-[oklch(0.62_0.09_30)]/15 text-[oklch(0.8_0.08_30)]",
-  calming: "bg-[oklch(0.68_0.06_150)]/15 text-[oklch(0.8_0.07_150)]",
+  frustrated: "bg-[oklch(0.8_0.06_80)]/15 text-[oklch(0.47_0.065_72)]",
+  escalating: "bg-[oklch(0.7_0.085_28)]/15 text-[oklch(0.44_0.09_28)]",
+  calming: "bg-[oklch(0.66_0.055_152)]/15 text-[oklch(0.38_0.055_152)]",
 };
 
 const moodShiftNote: Record<string, string> = {
@@ -290,22 +290,22 @@ export function PracticeChat({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
-      <div className="flex items-center gap-3 rounded-2xl border bg-card p-3 shadow-sm">
+      <div className="flex items-center gap-3 rounded-2xl border bg-card p-3">
         <GuestAvatar />
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <p className="text-sm font-semibold">The guest</p>
+          <h2 className="truncate text-sm font-semibold text-foreground">
+            {scenarioTitle}
+          </h2>
+          <div className="mt-0.5 flex items-center gap-2">
+            <p className="text-xs text-muted-foreground">The guest</p>
             <span
-              className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
+              className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                 moodTone[lastGuestMood] ?? moodTone.neutral
               }`}
             >
               {moodLabel[lastGuestMood] ?? "neutral"}
             </span>
           </div>
-          <p className="truncate text-[11px] text-muted-foreground">
-            {scenarioTitle}
-          </p>
         </div>
       </div>
 
@@ -315,7 +315,7 @@ export function PracticeChat({
         aria-live="polite"
         className="min-h-0 flex-1 space-y-3 overflow-y-auto pb-4"
       >
-        <p className="text-center text-[11px] text-muted-foreground">
+        <p className="text-center text-xs text-muted-foreground">
           You are practising as yourself. Nothing is graded live and nothing
           is shared — the notes at the end are yours alone.
         </p>
@@ -360,7 +360,7 @@ export function PracticeChat({
           )}
         </div>
         {sendFailed && (
-          <p className="text-xs text-[oklch(0.72_0.08_28)]">
+          <p className="text-xs text-[oklch(0.44_0.09_28)]">
             Couldn't send that message — please try again.
           </p>
         )}
@@ -386,9 +386,9 @@ export function PracticeChat({
             onClick={handleMic}
             disabled={exhausted || completing || sending}
             aria-label={listening ? "Stop voice input" : "Start voice input"}
-            className={`size-11 shrink-0 rounded-xl ${
+            className={`size-11 shrink-0 rounded-lg ${
               listening
-                ? "border-[oklch(0.68_0.09_30)]/60 bg-[oklch(0.62_0.09_30)]/15 text-[oklch(0.8_0.08_30)]"
+                ? "border-[oklch(0.62_0.09_28)]/50 bg-[oklch(0.7_0.085_28)]/10 text-[oklch(0.44_0.09_28)]"
                 : ""
             }`}
           >
@@ -399,13 +399,13 @@ export function PracticeChat({
             disabled={exhausted || completing || !input.trim() || sending}
             size="icon"
             aria-label="Send message"
-            className="size-11 shrink-0 rounded-xl"
+            className="size-11 shrink-0 rounded-lg"
           >
             <Send className="size-4" />
           </Button>
         </div>
         {listening && (
-          <p className="text-xs text-[oklch(0.8_0.08_30)]">
+          <p className="text-xs text-[oklch(0.44_0.09_28)]">
             Listening… your words fill the box — review, then send.
           </p>
         )}
@@ -416,7 +416,7 @@ export function PracticeChat({
 
 function GuestAvatar() {
   return (
-    <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[oklch(0.96_0.035_82)] text-sm font-bold text-[oklch(0.42_0.05_55)] ring-2 ring-[oklch(0.9_0.04_80)] dark:bg-[oklch(0.72_0.08_70)]/15 dark:text-[oklch(0.89_0.05_76)] dark:ring-[oklch(0.78_0.07_72)]/30">
+    <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[oklch(0.92_0.03_82)] text-sm font-bold text-[oklch(0.42_0.045_55)] ring-1 ring-border dark:bg-[oklch(0.72_0.08_70)]/15 dark:text-[oklch(0.89_0.05_76)] dark:ring-[oklch(0.78_0.07_72)]/30">
       G
     </div>
   );
@@ -427,11 +427,11 @@ function GuestRow({ content, mood }: { content: string; mood: string }) {
     <div className="flex msg-in items-end gap-2">
       <GuestAvatar />
       <div className="max-w-[78%]">
-        <div className="rounded-2xl rounded-bl-sm border bg-card px-4 py-2.5 text-sm shadow-sm">
+        <div className="rounded-2xl rounded-bl-sm border bg-card px-4 py-2.5 text-sm">
           {content}
         </div>
         <p
-          className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${
+          className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
             moodTone[mood] ?? moodTone.neutral
           }`}
         >
@@ -445,7 +445,7 @@ function GuestRow({ content, mood }: { content: string; mood: string }) {
 function StaffRow({ content }: { content: string }) {
   return (
     <div className="flex msg-in justify-end">
-      <div className="max-w-[78%] rounded-2xl rounded-br-sm bg-primary px-4 py-2.5 text-sm text-primary-foreground shadow-[0_4px_20px_-8px_var(--primary)]">
+      <div className="max-w-[78%] rounded-2xl rounded-br-sm bg-primary px-4 py-2.5 text-sm text-primary-foreground">
         {content}
       </div>
     </div>
@@ -456,7 +456,7 @@ function TypingIndicator() {
   return (
     <div className="flex msg-in items-end gap-2">
       <GuestAvatar />
-      <div className="rounded-2xl rounded-bl-sm border bg-card px-4 py-3 shadow-sm">
+      <div className="rounded-2xl rounded-bl-sm border bg-card px-4 py-3">
         <span className="flex items-center gap-1">
           {[0, 150, 300].map((delay) => (
             <span
@@ -475,7 +475,7 @@ function MoodDivider({ note }: { note: string }) {
   return (
     <div className="flex msg-in items-center gap-3 py-1">
       <div className="h-px flex-1 bg-border" />
-      <span className="text-[11px] font-medium text-muted-foreground">
+      <span className="text-xs font-medium text-muted-foreground">
         {note}
       </span>
       <div className="h-px flex-1 bg-border" />

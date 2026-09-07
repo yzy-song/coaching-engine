@@ -247,7 +247,7 @@ export default async function ManagerOverviewPage() {
             <Link
               key={rec.id}
               href={`/manager/verify/${rec.id}`}
-              className="flex items-center gap-3 rounded-xl border p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-muted/40 hover:shadow-[0_10px_30px_-16px_var(--primary)]"
+              className="flex items-center gap-3 rounded-xl border p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-muted/40 hover:shadow-sm"
             >
               <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground">
                 {initialsFor(rec.staff_id)}

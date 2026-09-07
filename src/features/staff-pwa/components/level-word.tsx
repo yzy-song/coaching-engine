@@ -16,13 +16,13 @@ export function LevelWord({
     level === null
       ? "bg-muted text-muted-foreground"
       : level >= 4
-        ? "bg-[oklch(0.68_0.06_150)]/15 text-[oklch(0.8_0.07_150)]"
+        ? "bg-[oklch(0.66_0.055_152)]/15 text-[oklch(0.38_0.055_152)]"
         : level === 3
-          ? "bg-[oklch(0.7_0.08_70)]/15 text-[oklch(0.89_0.05_76)]"
-          : "bg-[oklch(0.62_0.09_30)]/15 text-[oklch(0.8_0.08_30)]";
+          ? "bg-[oklch(0.8_0.06_80)]/15 text-[oklch(0.47_0.065_72)]"
+          : "bg-[oklch(0.7_0.085_28)]/15 text-[oklch(0.44_0.09_28)]";
   return (
     <span
-      className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-medium ${tone}`}
+      className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${tone}`}
     >
       {prefix ? `${prefix} · ${word}` : word}
     </span>

@@ -29,7 +29,7 @@ export default async function VerifyQueuePage() {
           return (
             <Link key={rec.id} href={`/manager/verify/${rec.id}`} className="block">
               <Card
-                className="fade-up transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-muted/30 hover:shadow-[0_10px_30px_-16px_var(--primary)]"
+                className="fade-up transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-muted/30 hover:shadow-sm"
                 style={{ animationDelay: `${i * 90}ms` }}
               >
                 <CardContent className="flex flex-wrap items-center gap-3 p-4 md:p-5">
@@ -72,7 +72,7 @@ export default async function VerifyQueuePage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
-                <CheckCircle2 className="size-5 text-[oklch(0.76_0.07_150)]" />
+                <CheckCircle2 className="size-5 text-primary" />
                 Queue clear
               </CardTitle>
             </CardHeader>

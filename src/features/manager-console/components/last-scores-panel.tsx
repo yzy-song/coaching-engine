@@ -23,10 +23,10 @@ type FloorState =
 
 const RECENT_LIMIT = 3;
 
-const AMBER_TEXT = "text-[oklch(0.86_0.07_74)]";
-const ROSE_TEXT = "text-[oklch(0.8_0.08_30)]";
+const AMBER_TEXT = "text-[oklch(0.45_0.07_72)]";
+const ROSE_TEXT = "text-[oklch(0.45_0.08_30)]";
 const ROSE_PILL =
-  "bg-[oklch(0.68_0.09_30)]/15 text-[oklch(0.8_0.08_30)] border-[oklch(0.68_0.09_30)]/30";
+  "bg-[oklch(0.66_0.09_30)]/12 text-[oklch(0.45_0.08_30)] border-[oklch(0.66_0.09_30)]/30";
 
 export function LastScoresPanel({ staffId }: { staffId: string }) {
   const [floor, setFloor] = useState<FloorState>({ kind: "loading" });
@@ -87,7 +87,7 @@ function StreamCard({ state }: { state: FloorState }) {
         />
         <p className="text-sm font-semibold">Floor history</p>
         {state.kind === "ready" && state.rows.length > 0 && (
-          <span className="ml-auto text-[10px] text-muted-foreground">
+          <span className="ml-auto text-xs text-muted-foreground">
             {state.rows.length > RECENT_LIMIT
               ? `last ${RECENT_LIMIT} of ${state.rows.length}`
               : `last ${state.rows.length}`}{" "}
@@ -125,7 +125,7 @@ function StreamCard({ state }: { state: FloorState }) {
                 <p className="truncate text-sm font-medium">
                   {dimensionShort[row.dimension]}
                 </p>
-                <p className="text-[10px] tabular-nums text-muted-foreground">
+                <p className="text-xs tabular-nums text-muted-foreground">
                   {row.recorded_at.slice(0, 10)}
                 </p>
               </div>

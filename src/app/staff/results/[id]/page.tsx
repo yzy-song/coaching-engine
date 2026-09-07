@@ -43,12 +43,12 @@ export default async function ResultsPage(
         </Button>
         <div>
           <p className="text-sm font-semibold">Your practice notes</p>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             One read of the whole conversation — every label points back to
             your own words.
           </p>
           {result && (
-            <p className="mt-0.5 text-[11px] font-medium text-primary">
+            <p className="mt-0.5 text-xs font-medium text-primary">
               {scenario?.title ?? "Practice run"} ·{" "}
               {dayLabel(result.completed_at)}
             </p>

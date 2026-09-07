@@ -161,17 +161,17 @@ export function VerifyPanel({
             className={`rounded-xl border p-4 text-left transition-all ${
               verdict === v
                 ? v === "confirmed"
-                  ? "border-[oklch(0.68_0.06_150)] bg-[oklch(0.68_0.06_150)]/10 ring-2 ring-[oklch(0.68_0.06_150)]/20"
+                  ? "border-primary bg-primary/10 ring-2 ring-primary/20"
                   : v === "corrected"
-                    ? "border-[oklch(0.78_0.07_72)] bg-[oklch(0.72_0.08_70)]/10 ring-2 ring-[oklch(0.78_0.07_72)]/20"
-                    : "border-[oklch(0.68_0.09_30)] bg-[oklch(0.62_0.09_30)]/10 ring-2 ring-[oklch(0.68_0.09_30)]/20"
+                    ? "border-[oklch(0.75_0.07_74)] bg-[oklch(0.75_0.07_74)]/12 ring-2 ring-[oklch(0.75_0.07_74)]/25"
+                    : "border-[oklch(0.66_0.09_30)] bg-[oklch(0.66_0.09_30)]/12 ring-2 ring-[oklch(0.66_0.09_30)]/25"
                 : "bg-card hover:bg-muted/40"
             }`}
           >
             <span className="flex items-center gap-2 text-lg font-semibold">
-              {v === "confirmed" && <Check className="size-5 text-[oklch(0.8_0.07_150)]" />}
-              {v === "corrected" && <RotateCcw className="size-5 text-[oklch(0.85_0.07_74)]" />}
-              {v === "rejected" && <X className="size-5 text-[oklch(0.8_0.08_30)]" />}
+              {v === "confirmed" && <Check className="size-5 text-primary" />}
+              {v === "corrected" && <RotateCcw className="size-5 text-[oklch(0.45_0.07_72)]" />}
+              {v === "rejected" && <X className="size-5 text-[oklch(0.45_0.08_30)]" />}
               {verdictLabel[v]}
             </span>
           </button>
@@ -252,19 +252,19 @@ function VerifyResultPanel({
       <div
         className={`flex items-center gap-3 rounded-xl border p-4 ${
           verdict === "confirmed"
-            ? "border-[oklch(0.68_0.06_150)]/40 bg-[oklch(0.68_0.06_150)]/10"
+            ? "border-primary/40 bg-primary/10"
             : verdict === "corrected"
-              ? "border-[oklch(0.78_0.07_72)]/40 bg-[oklch(0.72_0.08_70)]/10"
-              : "border-[oklch(0.68_0.09_30)]/40 bg-[oklch(0.62_0.09_30)]/10"
+              ? "border-[oklch(0.75_0.07_74)]/40 bg-[oklch(0.75_0.07_74)]/12"
+              : "border-[oklch(0.66_0.09_30)]/40 bg-[oklch(0.66_0.09_30)]/12"
         }`}
       >
         {verdict === "confirmed" && (
-          <Check className="size-6 text-[oklch(0.8_0.07_150)]" />
+          <Check className="size-6 text-primary" />
         )}
         {verdict === "corrected" && (
-          <RotateCcw className="size-6 text-[oklch(0.85_0.07_74)]" />
+          <RotateCcw className="size-6 text-[oklch(0.45_0.07_72)]" />
         )}
-        {verdict === "rejected" && <X className="size-6 text-[oklch(0.8_0.08_30)]" />}
+        {verdict === "rejected" && <X className="size-6 text-[oklch(0.45_0.08_30)]" />}
         <div>
           <p className="font-semibold">
             {verdict === "confirmed"
@@ -283,18 +283,18 @@ function VerifyResultPanel({
       <CalibrationShift data={data} />
 
       {data.escalation && (
-        <div className="rounded-xl border border-[oklch(0.68_0.09_30)]/40 bg-[oklch(0.62_0.09_30)]/10 p-4">
+        <div className="rounded-xl border border-[oklch(0.66_0.09_30)]/30 bg-[oklch(0.66_0.09_30)]/10 p-4">
           <div className="flex items-center gap-2">
-            <ShieldAlert className="size-5 text-[oklch(0.8_0.08_30)]" />
-            <p className="text-sm font-semibold text-[oklch(0.88_0.05_32)]">
+            <ShieldAlert className="size-5 text-[oklch(0.45_0.08_30)]" />
+            <p className="text-sm font-semibold text-[oklch(0.45_0.08_30)]">
               Escalated — {routeLabel[data.escalation.route]} · rule{" "}
               {data.escalation.rule_id}
             </p>
-            <Badge variant="outline" className="ml-auto border-[oklch(0.68_0.09_30)]/40 text-[oklch(0.8_0.08_30)]">
+            <Badge variant="outline" className="ml-auto border-[oklch(0.66_0.09_30)]/30 text-[oklch(0.45_0.08_30)]">
               severity {data.escalation.severity}
             </Badge>
           </div>
-          <p className="mt-2 text-sm text-[oklch(0.88_0.05_32)]/80">
+          <p className="mt-2 text-sm text-[oklch(0.45_0.08_30)]/80">
             {data.escalation.summary}
           </p>
         </div>
@@ -369,7 +369,7 @@ function CalibrationShift({ data }: { data: VerifyResponse }) {
         />
       </div>
       {hasInterval && (
-        <p className="mt-1 text-[11px] tabular-nums text-muted-foreground">
+        <p className="mt-1 text-xs tabular-nums text-muted-foreground">
           95% CI {((shift.lower ?? 0) * 100).toFixed(1)}%–
           {((shift.upper ?? 0) * 100).toFixed(1)}%
         </p>

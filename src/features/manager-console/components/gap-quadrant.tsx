@@ -12,25 +12,30 @@ import type { GapDimension, Quadrant, TransferGap } from "@/lib/types";
 
 /** Quadrant badge tones — one per quadrant, keyed by the tone the dataset
  * rows already carry (see quadrantMeta in lib/format.ts). Muted warm family:
- * sage / caramel / terracotta / olive. */
+ * sage / caramel / terracotta / olive, tuned for the cream surface: tinted
+ * chip fills with deep same-hue text, never light-on-light. */
 const toneClasses: Record<string, { chip: string; text: string }> = {
   emerald: {
-    chip: "bg-[oklch(0.68_0.06_150)]/15 text-[oklch(0.8_0.07_150)] border-[oklch(0.68_0.06_150)]/30",
-    text: "text-[oklch(0.8_0.07_150)]",
+    chip: "bg-primary/10 text-primary border-primary/25",
+    text: "text-primary",
   },
   amber: {
-    chip: "bg-[oklch(0.78_0.07_72)]/15 text-[oklch(0.86_0.07_74)] border-[oklch(0.78_0.07_72)]/30",
-    text: "text-[oklch(0.86_0.07_74)]",
+    chip: "bg-[oklch(0.76_0.07_74)]/15 text-[oklch(0.45_0.07_72)] border-[oklch(0.76_0.07_74)]/30",
+    text: "text-[oklch(0.45_0.07_72)]",
   },
   rose: {
-    chip: "bg-[oklch(0.68_0.09_30)]/15 text-[oklch(0.8_0.08_30)] border-[oklch(0.68_0.09_30)]/30",
-    text: "text-[oklch(0.8_0.08_30)]",
+    chip: "bg-[oklch(0.66_0.09_30)]/12 text-[oklch(0.45_0.08_30)] border-[oklch(0.66_0.09_30)]/30",
+    text: "text-[oklch(0.45_0.08_30)]",
   },
-  violet: {
-    chip: "bg-[oklch(0.58_0.05_120)]/15 text-[oklch(0.8_0.06_120)] border-[oklch(0.58_0.05_120)]/30",
-    text: "text-[oklch(0.8_0.06_120)]",
+  olive: {
+    chip: "bg-[oklch(0.63_0.06_115)]/12 text-[oklch(0.43_0.06_115)] border-[oklch(0.63_0.06_115)]/30",
+    text: "text-[oklch(0.43_0.06_115)]",
   },
 };
+
+/** Recalibrate arrives as "violet" in quadrantMeta while its badge renders
+ * olive; unknown keys fall back to olive instead of breaking the rows. */
+const toneFor = (tone: string) => toneClasses[tone] ?? toneClasses.olive;
 
 /** One-line conclusion per quadrant for the top card. The four readings
  * follow the quadrant semantics the dataset rows already carry — the copy
@@ -82,7 +87,7 @@ export function GapQuadrant({
   const [selected, setSelected] = useState(gap.dimensions[0]?.dimension);
   const active =
     gap.dimensions.find((d) => d.dimension === selected) ?? gap.dimensions[0];
-  const leadTone = lead ? toneClasses[quadrantMeta[lead.quadrant].tone] : null;
+  const leadTone = lead ? toneFor(quadrantMeta[lead.quadrant].tone) : null;
 
   return (
     <div className="space-y-6">
@@ -136,7 +141,7 @@ export function GapQuadrant({
               </span>
               <Badge
                 variant="outline"
-                className={`shrink-0 ${toneClasses[quadrantMeta[d.quadrant].tone].chip}`}
+                className={`shrink-0 ${toneFor(quadrantMeta[d.quadrant].tone).chip}`}
               >
                 {quadrantMeta[d.quadrant].label}
               </Badge>
@@ -151,9 +156,7 @@ export function GapQuadrant({
               <p className="text-sm font-semibold">
                 {dimensionShort[active.dimension]} —{" "}
                 <span
-                  className={
-                    toneClasses[quadrantMeta[active.quadrant].tone].text
-                  }
+                  className={toneFor(quadrantMeta[active.quadrant].tone).text}
                 >
                   {quadrantMeta[active.quadrant].label}
                 </span>

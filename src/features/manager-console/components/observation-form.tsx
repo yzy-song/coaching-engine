@@ -71,9 +71,9 @@ const MOMENT_TYPES: ReadonlyArray<{
   },
 ];
 
-const FLOOR_DOT = "text-[oklch(0.8_0.08_30)]";
+const FLOOR_DOT = "text-[oklch(0.45_0.08_30)]";
 const FLOOR_PILL =
-  "bg-[oklch(0.68_0.09_30)]/15 text-[oklch(0.8_0.08_30)] border-[oklch(0.68_0.09_30)]/30";
+  "bg-[oklch(0.66_0.09_30)]/12 text-[oklch(0.45_0.08_30)] border-[oklch(0.66_0.09_30)]/30";
 
 type RecordState =
   | { kind: "loading" }
@@ -229,9 +229,9 @@ export function ObservationForm({ staff }: { staff: StaffMember[] }) {
                       {s.name}
                     </span>
                     <span
-                      className={`block text-[10px] leading-tight ${
+                      className={`block text-xs leading-tight ${
                         selected
-                          ? "text-primary-foreground/70"
+                          ? "text-primary-foreground/85"
                           : "text-muted-foreground"
                       }`}
                     >
@@ -266,7 +266,7 @@ export function ObservationForm({ staff }: { staff: StaffMember[] }) {
               })}
             </div>
             {momentMeta !== null && (
-              <p className="text-[10px] text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 Preselects{" "}
                 {momentMeta.suggest
                   .map((d) => observationDimensionLabels[d])
@@ -390,7 +390,7 @@ function RecordAnchors({
         />
         <p className="text-sm font-semibold">{name}&apos;s floor record</p>
         {record.kind === "ready" && record.rows.length > 0 && (
-          <span className="ml-auto text-[10px] text-muted-foreground">
+          <span className="ml-auto text-xs text-muted-foreground">
             {record.rows.length} logged · newest first
           </span>
         )}
@@ -429,7 +429,7 @@ function RecordAnchors({
                 <p className="truncate text-sm font-medium">
                   {dimensionShort[row.dimension]}
                 </p>
-                <p className="text-[10px] tabular-nums text-muted-foreground">
+                <p className="text-xs tabular-nums text-muted-foreground">
                   {row.recorded_at.slice(0, 10)}
                 </p>
               </div>

@@ -74,7 +74,7 @@ export function RadarChart({
             key={i}
             points={polygonPoints(((i + 1) / RINGS) * R)}
             fill="none"
-            stroke="oklch(0.96 0.015 90 / 7%)"
+            stroke="oklch(0.4 0.02 70 / 0.12)"
           />
         ))}
 
@@ -87,7 +87,7 @@ export function RadarChart({
               y1={CY}
               x2={outer.x}
               y2={outer.y}
-              stroke="oklch(0.96 0.015 90 / 10%)"
+              stroke="oklch(0.4 0.02 70 / 0.12)"
             />
           );
         })}
@@ -105,9 +105,9 @@ export function RadarChart({
               y={lp.y}
               textAnchor={anchor}
               dy={dy}
-              fontSize={10.5}
-              opacity={series.some((s) => s.values[a] != null) ? 1 : 0.4}
-              fill="var(--muted-foreground)"
+              fontSize={12}
+              opacity={series.some((s) => s.values[a] != null) ? 1 : 0.72}
+              fill="var(--foreground)"
             >
               {dimensionShort[a]}
             </text>

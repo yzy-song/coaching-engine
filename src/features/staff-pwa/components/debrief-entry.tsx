@@ -46,8 +46,8 @@ export function DebriefEntry() {
       <div className="space-y-4">
         <div className="rounded-2xl border bg-card p-4">
           <div className="flex items-center gap-2">
-            <div className="flex size-8 items-center justify-center rounded-full bg-[oklch(0.68_0.06_150)]/15">
-              <Sparkles className="size-4 text-[oklch(0.8_0.07_150)]" />
+            <div className="flex size-8 items-center justify-center rounded-full bg-[oklch(0.66_0.055_152)]/15">
+              <Sparkles className="size-4 text-[oklch(0.38_0.055_152)]" />
             </div>
             <p className="text-sm font-semibold">
               Your hotel&apos;s own standard — straight after your shift
@@ -76,18 +76,21 @@ export function DebriefEntry() {
         {result.generated_scenario_id && (
           <Link
             href={`/staff/practice/${result.generated_scenario_id}`}
-            className="flex items-center justify-between rounded-2xl bg-primary p-4 text-primary-foreground shadow-[0_8px_30px_-12px_var(--primary)]"
+            className="group flex items-center gap-3 rounded-2xl border bg-card p-4"
           >
-            <div>
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[oklch(0.66_0.055_152)]/15">
+              <Sparkles className="size-4 text-[oklch(0.38_0.055_152)]" />
+            </div>
+            <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold">
                 A 3-minute replay was built from what you just said
               </p>
-              <p className="text-xs opacity-80">
+              <p className="mt-0.5 text-xs text-muted-foreground">
                 Practise it now while it&apos;s fresh — it&apos;s yours, not
                 shared.
               </p>
             </div>
-            <ArrowRight className="size-5 shrink-0" />
+            <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
           </Link>
         )}
       </div>
@@ -130,7 +133,7 @@ export function DebriefEntry() {
             <Mic className="size-4" />
           </Button>
         </div>
-        <p className="mt-2 text-center text-[10px] text-muted-foreground">
+        <p className="mt-2 text-center text-xs text-muted-foreground">
           Voice debrief coming soon — audio is deleted once the transcript is
           confirmed.
         </p>

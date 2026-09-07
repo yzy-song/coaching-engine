@@ -24,6 +24,9 @@ export default function StaffHomePage() {
 
   return (
     <div className="space-y-5">
+      <h1 className="font-heading text-2xl font-semibold tracking-tight">
+        Your practice
+      </h1>
       <DebriefEntry />
 
       <div className="rounded-2xl border bg-card p-4">
@@ -61,7 +64,7 @@ export default function StaffHomePage() {
         </Link>
       </div>
 
-      <p className="text-center text-[11px] leading-relaxed text-muted-foreground">
+      <p className="text-center text-xs leading-relaxed text-muted-foreground">
         This is your practice space — just for you. Your manager never sees
         your individual practice scores. They only get a coaching insight, and
         only after they&apos;ve logged their own observation of you.
