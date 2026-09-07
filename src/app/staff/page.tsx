@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, TrendingUp } from "lucide-react";
 import { DebriefEntry } from "@/features/staff-pwa/components/debrief-entry";
+import { LevelWord } from "@/features/staff-pwa/components/level-word";
 import { diegoScoreResult } from "@/lib/mock/seed";
 import { dimensionShort } from "@/lib/format";
 
@@ -32,25 +33,17 @@ export default function StaffHomePage() {
             href="/staff/history"
             className="flex items-center gap-1 text-xs font-medium text-primary"
           >
-            All scores <ArrowRight className="size-3" />
+            All practice <ArrowRight className="size-3" />
           </Link>
         </div>
         <div className="mt-3 space-y-2">
           {lastScore.scores.slice(0, 3).map(({ dimension, level }) => (
             <div key={dimension} className="flex items-center gap-3">
-              <span
-                className={`flex size-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold ${
-                  level === null
-                    ? "bg-muted text-muted-foreground"
-                    : level >= 4
-                      ? "bg-[oklch(0.66_0.11_150)]/15 text-[oklch(0.78_0.1_150)]"
-                      : "bg-amber-500/15 text-amber-200"
-                }`}
-              >
-                {level ?? "—"}
-              </span>
-              <p className="flex-1 text-sm">{dimensionShort[dimension]}</p>
-              <span className="text-xs text-muted-foreground">
+              <LevelWord level={level} />
+              <p className="min-w-0 flex-1 truncate text-sm">
+                {dimensionShort[dimension]}
+              </p>
+              <span className="shrink-0 text-xs text-muted-foreground">
                 {lastRunDay}
               </span>
             </div>
@@ -62,15 +55,16 @@ export default function StaffHomePage() {
         >
           <span className="flex items-center gap-2">
             <TrendingUp className="size-4" />
-            See what earned those scores
+            See what earned those labels
           </span>
           <ArrowRight className="size-4" />
         </Link>
       </div>
 
       <p className="text-center text-[11px] leading-relaxed text-muted-foreground">
-        Everything your manager sees about you, you see too. Nothing here is
-        hidden, and nothing routes to a disciplinary path.
+        This is your practice space — just for you. Your manager never sees
+        your individual practice scores. They only get a coaching insight, and
+        only after they&apos;ve logged their own observation of you.
       </p>
     </div>
   );

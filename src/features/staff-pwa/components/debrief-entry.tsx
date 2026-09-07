@@ -46,8 +46,8 @@ export function DebriefEntry() {
       <div className="space-y-4">
         <div className="rounded-2xl border bg-card p-4">
           <div className="flex items-center gap-2">
-            <div className="flex size-8 items-center justify-center rounded-full bg-[oklch(0.66_0.11_150)]/15">
-              <Sparkles className="size-4 text-[oklch(0.78_0.1_150)]" />
+            <div className="flex size-8 items-center justify-center rounded-full bg-[oklch(0.68_0.06_150)]/15">
+              <Sparkles className="size-4 text-[oklch(0.8_0.07_150)]" />
             </div>
             <p className="text-sm font-semibold">
               Your hotel&apos;s own standard — straight after your shift
@@ -98,7 +98,8 @@ export function DebriefEntry() {
     <div className="space-y-4">
       <div className="rounded-2xl border bg-card p-4">
         <p className="text-sm font-semibold">
-          What happened on your shift?
+          This is just for you and your manager to talk through what actually
+          happened.
         </p>
         <p className="mt-0.5 text-xs text-muted-foreground">
           30–90 seconds, in your own words. It never routes to a disciplinary

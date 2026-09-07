@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { ChevronDown, Quote } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { dimensionLabels, dimensionShort } from "@/lib/format";
+import { LevelWord } from "@/features/staff-pwa/components/level-word";
+import { dimensionLabels } from "@/lib/format";
 import type { ScoreResult } from "@/lib/types";
 
 export function ScoreResults({ result }: { result: ScoreResult }) {
@@ -15,7 +15,7 @@ export function ScoreResults({ result }: { result: ScoreResult }) {
     <div className="space-y-4">
       <div className="rounded-2xl border bg-card p-4 text-center">
         <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Overall
+          In one read
         </p>
         <p className="mt-1 text-sm leading-relaxed">{result.overall_feedback}</p>
       </div>
@@ -32,39 +32,11 @@ export function ScoreResults({ result }: { result: ScoreResult }) {
               onClick={() => setOpenDim(open ? null : dimension)}
               className="flex w-full items-center gap-3 text-left"
             >
-              <span
-                className={`flex size-10 shrink-0 items-center justify-center rounded-xl text-base font-bold ${
-                  level === null
-                    ? "bg-muted text-muted-foreground"
-                    : level >= 4
-                      ? "bg-[oklch(0.66_0.11_150)]/15 text-[oklch(0.78_0.1_150)]"
-                      : level === 3
-                        ? "bg-amber-500/15 text-amber-200"
-                        : "bg-rose-500/15 text-rose-300"
-                }`}
-              >
-                {level ?? "—"}
-              </span>
-              <div className="flex-1">
+              <LevelWord level={level} />
+              <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold">
                   {dimensionLabels[dimension]}
                 </p>
-                <div className="mt-1.5 flex gap-1">
-                  {[1, 2, 3, 4, 5].map((n) => (
-                    <span
-                      key={n}
-                      className={`h-1.5 w-6 rounded-full ${
-                        level !== null && n <= level
-                          ? level >= 4
-                            ? "bg-[oklch(0.66_0.11_150)]"
-                            : level === 3
-                              ? "bg-amber-500"
-                              : "bg-rose-500"
-                          : "bg-muted"
-                      }`}
-                    />
-                  ))}
-                </div>
               </div>
               <ChevronDown
                 className={`size-4 shrink-0 text-muted-foreground transition-transform ${
@@ -79,9 +51,9 @@ export function ScoreResults({ result }: { result: ScoreResult }) {
                   <div key={ev.turn_index} className="rounded-xl bg-muted/40 p-3">
                     <p className="flex items-center gap-1.5 text-xs font-semibold">
                       <Quote className="size-3.5 text-primary" />
-                      What earned the {level} — your own words
+                      What earned this — your own words
                     </p>
-                    <p className="mt-1.5 font-mono text-xs italic leading-relaxed text-muted-foreground">
+                    <p className="mt-1.5 text-xs italic leading-relaxed text-muted-foreground">
                       “{ev.quote}”
                     </p>
                     <p className="mt-2 text-xs leading-relaxed">
@@ -93,7 +65,7 @@ export function ScoreResults({ result }: { result: ScoreResult }) {
             )}
             {open && evidence.length === 0 && (
               <p className="mt-2 text-xs text-muted-foreground">
-                No evidence span captured — this dimension stays unscored
+                No words captured for this one — it stays without a label
                 rather than guessed.
               </p>
             )}
@@ -102,13 +74,10 @@ export function ScoreResults({ result }: { result: ScoreResult }) {
       })}
 
       <div className="rounded-2xl border border-dashed p-4">
-        <p className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Badge variant="outline" className="shrink-0">
-            {dimensionShort[result.scores[0].dimension]} · practice
-          </Badge>
-          Your manager can see this score only after logging their own floor
-          observation — the two views stay independent, so the comparison is
-          real.
+        <p className="text-xs text-muted-foreground">
+          This is your practice space — just for you. Your manager never sees
+          your individual practice scores. They only get a coaching insight,
+          and only after they&apos;ve logged their own observation of you.
         </p>
       </div>
     </div>

@@ -15,7 +15,7 @@ import type { ScoreResult } from "@/lib/types";
 const tabs = [
   { href: "/staff", label: "Home", icon: Home },
   { href: "/staff/practice", label: "Practice", icon: MessageCircle },
-  { href: "/staff/history", label: "My scores", icon: History },
+  { href: "/staff/history", label: "My practice", icon: History },
 ];
 
 // The staff PWA is the narrative actor's phone in the demo: roster id
@@ -36,25 +36,36 @@ function initials(name: string): string {
 }
 
 /** The actor's completed practice runs in the seed (the staff PWA narrates
- * one staff member, so their header level is their own data — never static). */
+ * one staff member, so the header's growth read is their own data — never
+ * static). */
 const actorPracticeResults = [
   completedAttempt.result,
   historyAug29Attempt.result,
   historyAug26Attempt.result,
 ].filter((result): result is ScoreResult => result !== null);
 
-/** Mean of the actor's rated dimensions across completed practice runs, one
- * decimal — the same story the transfer-gap page tells as "Practice 4.0". */
-function actorPracticeMean(): string | null {
-  const levels = actorPracticeResults.flatMap((result) =>
-    result.scores
-      .filter((s) => s.level !== null)
-      .map((s) => s.level as number)
+/** Completed practice runs in the month of the actor's most recent run — the
+ * narrative's "this month". Mirrors the pool-as-of rule in mock/db.ts: the
+ * latest score date is the reference point, so the count never ages out as
+ * the real calendar moves on. */
+function practicesThisMonth(): number {
+  if (actorPracticeResults.length === 0) return 0;
+  const months = actorPracticeResults.map((result) =>
+    result.completed_at.slice(0, 7)
   );
-  if (levels.length === 0) return null;
-  const mean = levels.reduce((sum, level) => sum + level, 0) / levels.length;
-  return mean.toFixed(1);
+  months.sort();
+  const newestMonth = months[months.length - 1];
+  return actorPracticeResults.filter(
+    (result) => result.completed_at.slice(0, 7) === newestMonth
+  ).length;
 }
+
+/** Header growth line — replaces the old practice-mean badge (a numeric
+ * score no staff member ever sees). */
+const practicesThisMonthCount = practicesThisMonth();
+const growthLabel = `${practicesThisMonthCount} ${
+  practicesThisMonthCount === 1 ? "practice" : "practices"
+} this month`;
 
 export function StaffShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -76,8 +87,8 @@ export function StaffShell({ children }: { children: React.ReactNode }) {
                 .join(" · ")}
             </p>
           </div>
-          <div className="ml-auto flex size-8 items-center justify-center rounded-full bg-[oklch(0.66_0.11_150)]/15 text-xs font-bold text-[oklch(0.78_0.1_150)] ring-1 ring-[oklch(0.66_0.11_150)]/30">
-            {actorPracticeMean() ?? "—"}
+          <div className="ml-auto flex max-w-[46%] shrink-0 items-center justify-end rounded-full bg-[oklch(0.68_0.06_150)]/15 px-2.5 py-1 text-right text-[11px] font-medium leading-tight text-[oklch(0.8_0.07_150)] ring-1 ring-[oklch(0.68_0.06_150)]/30">
+            {growthLabel}
           </div>
         </header>
 

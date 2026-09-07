@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, Eye, Lock } from "lucide-react";
+import { LevelWord } from "@/features/staff-pwa/components/level-word";
 import {
   completedAttempt,
   diegoObservation,
@@ -56,10 +57,11 @@ export default function HistoryPage() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-lg font-semibold tracking-tight">My scores</h1>
+        <h1 className="text-lg font-semibold tracking-tight">My practice</h1>
         <p className="text-xs text-muted-foreground">
-          Everything here is everything your manager can see — no hidden
-          records, ever.
+          This is your practice space — just for you. Your manager never sees
+          your individual practice scores. They only get a coaching insight,
+          and only after they&apos;ve logged their own observation of you.
         </p>
       </div>
 
@@ -72,20 +74,11 @@ export default function HistoryPage() {
             </div>
             <div className="mt-2.5 flex flex-wrap gap-2">
               {entry.scores.map(({ dimension, level }) => (
-                <span
+                <LevelWord
                   key={dimension}
-                  className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium ${
-                    level === null
-                      ? "bg-muted text-muted-foreground"
-                      : level >= 4
-                        ? "bg-[oklch(0.66_0.11_150)]/15 text-[oklch(0.78_0.1_150)]"
-                        : level === 3
-                          ? "bg-amber-500/15 text-amber-200"
-                          : "bg-rose-500/15 text-rose-300"
-                  }`}
-                >
-                  {dimensionShort[dimension]} · {level ?? "—"}
-                </span>
+                  level={level}
+                  prefix={dimensionShort[dimension]}
+                />
               ))}
             </div>
             <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
@@ -93,14 +86,14 @@ export default function HistoryPage() {
                 {managerObserved ? (
                   <>
                     <Eye className="size-3.5" />
-                    Your manager logged their own observation — this score was
-                    part of a transfer-gap reading.
+                    Your manager logged their own observation of you — that&apos;s
+                    what turns your practice into a coaching insight.
                   </>
                 ) : (
                   <>
                     <Lock className="size-3.5" />
-                    Waiting on your manager's floor observation before it's
-                    compared.
+                    Waiting on your manager&apos;s floor observation — until
+                    then, this practice stays just yours.
                   </>
                 )}
               </span>

@@ -14,8 +14,8 @@ export default async function PracticeListPage() {
       <div>
         <h1 className="text-lg font-semibold tracking-tight">Practice</h1>
         <p className="text-xs text-muted-foreground">
-          3 minutes each. Scored once at the end — with the exact words that
-          earned each score.
+          3 minutes each. When you finish, every label comes back with the
+          exact words that earned it — and it stays yours.
         </p>
       </div>
 
@@ -30,7 +30,7 @@ export default async function PracticeListPage() {
             <p className="text-xs font-semibold uppercase tracking-wide opacity-80">
               Built from your shift
             </p>
-            <Badge className="ml-auto bg-white/20 text-primary-foreground">
+            <Badge className="ml-auto bg-[oklch(0.985_0.01_95)]/20 text-primary-foreground">
               {scenario.duration_minutes} min
             </Badge>
           </div>

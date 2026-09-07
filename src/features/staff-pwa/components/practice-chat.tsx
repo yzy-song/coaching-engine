@@ -23,9 +23,9 @@ const moodLabel: Record<string, string> = {
 
 const moodTone: Record<string, string> = {
   neutral: "bg-muted text-muted-foreground",
-  frustrated: "bg-amber-500/15 text-amber-200",
-  escalating: "bg-rose-500/15 text-rose-300",
-  calming: "bg-[oklch(0.66_0.11_150)]/15 text-[oklch(0.78_0.1_150)]",
+  frustrated: "bg-[oklch(0.7_0.08_70)]/15 text-[oklch(0.89_0.05_76)]",
+  escalating: "bg-[oklch(0.62_0.09_30)]/15 text-[oklch(0.8_0.08_30)]",
+  calming: "bg-[oklch(0.68_0.06_150)]/15 text-[oklch(0.8_0.07_150)]",
 };
 
 const moodShiftNote: Record<string, string> = {
@@ -316,8 +316,8 @@ export function PracticeChat({
         className="min-h-0 flex-1 space-y-3 overflow-y-auto pb-4"
       >
         <p className="text-center text-[11px] text-muted-foreground">
-          You are practising as yourself. Nothing is graded live — the score
-          comes once, at the end, over the whole conversation.
+          You are practising as yourself. Nothing is graded live and nothing
+          is shared — the notes at the end are yours alone.
         </p>
         {messages.map((message, i) => (
           <Fragment key={i}>
@@ -355,12 +355,12 @@ export function PracticeChat({
           </div>
           {canFinish && (
             <Button onClick={handleComplete} disabled={completing} size="sm">
-              {completing ? "Scoring…" : "Finish & get scored"}
+              {completing ? "Wrapping up…" : "Finish & see your notes"}
             </Button>
           )}
         </div>
         {sendFailed && (
-          <p className="text-xs text-rose-400">
+          <p className="text-xs text-[oklch(0.72_0.08_28)]">
             Couldn't send that message — please try again.
           </p>
         )}
@@ -374,7 +374,7 @@ export function PracticeChat({
               listening
                 ? "Listening — speak your reply…"
                 : exhausted
-                  ? "Conversation complete — finish to see your score"
+                  ? "Conversation complete — finish to see your notes"
                   : "What would you say to the guest?"
             }
             className="flex-1 rounded-xl border bg-card px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-60"
@@ -387,7 +387,9 @@ export function PracticeChat({
             disabled={exhausted || completing || sending}
             aria-label={listening ? "Stop voice input" : "Start voice input"}
             className={`size-11 shrink-0 rounded-xl ${
-              listening ? "border-rose-400/60 bg-rose-500/15 text-rose-300" : ""
+              listening
+                ? "border-[oklch(0.68_0.09_30)]/60 bg-[oklch(0.62_0.09_30)]/15 text-[oklch(0.8_0.08_30)]"
+                : ""
             }`}
           >
             <Mic className={`size-4 ${listening ? "animate-pulse" : ""}`} />
@@ -403,7 +405,7 @@ export function PracticeChat({
           </Button>
         </div>
         {listening && (
-          <p className="text-xs text-rose-300">
+          <p className="text-xs text-[oklch(0.8_0.08_30)]">
             Listening… your words fill the box — review, then send.
           </p>
         )}
@@ -414,7 +416,7 @@ export function PracticeChat({
 
 function GuestAvatar() {
   return (
-    <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-sm font-bold text-amber-800 ring-2 ring-amber-200 dark:bg-amber-500/15 dark:text-amber-200 dark:ring-amber-400/30">
+    <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[oklch(0.96_0.035_82)] text-sm font-bold text-[oklch(0.42_0.05_55)] ring-2 ring-[oklch(0.9_0.04_80)] dark:bg-[oklch(0.72_0.08_70)]/15 dark:text-[oklch(0.89_0.05_76)] dark:ring-[oklch(0.78_0.07_72)]/30">
       G
     </div>
   );

@@ -42,9 +42,9 @@ export default async function ResultsPage(
           <ArrowLeft className="size-4" />
         </Button>
         <div>
-          <p className="text-sm font-semibold">Your score</p>
+          <p className="text-sm font-semibold">Your practice notes</p>
           <p className="text-[11px] text-muted-foreground">
-            Scored once, over the whole conversation — each level points to
+            One read of the whole conversation — every label points back to
             your own words.
           </p>
           {result && (
@@ -60,8 +60,8 @@ export default async function ResultsPage(
         <ScoreResults result={result} />
       ) : (
         <p className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
-          This attempt is still in progress — finish the conversation to get
-          scored.
+          This practice is still in progress — finish the conversation to see
+          your notes.
         </p>
       )}
 
