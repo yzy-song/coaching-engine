@@ -1,35 +1,34 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowUpRight, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   dimensionShort,
-  formatGap,
   observationDimensionLabels,
   quadrantMeta,
 } from "@/lib/format";
 import type { GapDimension, Quadrant, TransferGap } from "@/lib/types";
 
 /** Quadrant badge tones — one per quadrant, keyed by the tone the dataset
- * rows already carry (see quadrantMeta in lib/format.ts). */
+ * rows already carry (see quadrantMeta in lib/format.ts). Muted warm family:
+ * sage / caramel / terracotta / olive. */
 const toneClasses: Record<string, { chip: string; text: string }> = {
   emerald: {
-    chip: "bg-[oklch(0.66_0.11_150)]/15 text-[oklch(0.78_0.1_150)] border-[oklch(0.66_0.11_150)]/30",
-    text: "text-[oklch(0.78_0.1_150)]",
+    chip: "bg-[oklch(0.68_0.06_150)]/15 text-[oklch(0.8_0.07_150)] border-[oklch(0.68_0.06_150)]/30",
+    text: "text-[oklch(0.8_0.07_150)]",
   },
   amber: {
-    chip: "bg-[oklch(0.79_0.12_80)]/15 text-[oklch(0.84_0.11_85)] border-[oklch(0.79_0.12_80)]/30",
-    text: "text-[oklch(0.84_0.11_85)]",
+    chip: "bg-[oklch(0.78_0.07_72)]/15 text-[oklch(0.86_0.07_74)] border-[oklch(0.78_0.07_72)]/30",
+    text: "text-[oklch(0.86_0.07_74)]",
   },
   rose: {
-    chip: "bg-[oklch(0.69_0.13_35)]/15 text-[oklch(0.78_0.11_35)] border-[oklch(0.69_0.13_35)]/30",
-    text: "text-[oklch(0.78_0.11_35)]",
+    chip: "bg-[oklch(0.68_0.09_30)]/15 text-[oklch(0.8_0.08_30)] border-[oklch(0.68_0.09_30)]/30",
+    text: "text-[oklch(0.8_0.08_30)]",
   },
   violet: {
-    chip: "bg-[oklch(0.64_0.07_340)]/15 text-[oklch(0.76_0.07_340)] border-[oklch(0.64_0.07_340)]/30",
-    text: "text-[oklch(0.76_0.07_340)]",
+    chip: "bg-[oklch(0.58_0.05_120)]/15 text-[oklch(0.8_0.06_120)] border-[oklch(0.58_0.05_120)]/30",
+    text: "text-[oklch(0.8_0.06_120)]",
   },
 };
 
@@ -44,6 +43,15 @@ const conclusionLine: Record<Quadrant, string> = {
   competent: "Floor matches practice. No transfer gap on the scored dimensions.",
   recalibrate:
     "Floor runs ahead of practice. Worth checking the standard.",
+};
+
+/** One-line qualitative reading per quadrant for the dimension rows. The
+ * rows carry the coaching recommendation, never the numbers behind it. */
+const quadrantLine: Record<Quadrant, string> = {
+  blocked: "Practice looks fine, the floor doesn't match.",
+  skill_gap: "The floor is trailing practice.",
+  competent: "Floor matches practice.",
+  recalibrate: "The floor runs ahead of practice.",
 };
 
 /** The dimension that sets the page's overall reading: a blocked finding
@@ -101,9 +109,8 @@ export function GapQuadrant({
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Scored dimensions</CardTitle>
           <p className="text-xs text-muted-foreground">
-            One row per scored dimension: practice mean → floor mean, with the
-            quadrant reading as the badge. Select a row for the evidence
-            behind it.
+            One row per scored dimension, with the coaching reading as the
+            badge. Select a row for the evidence behind it.
           </p>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -123,9 +130,8 @@ export function GapQuadrant({
                 <span className="block truncate text-sm font-semibold">
                   {dimensionShort[d.dimension]}
                 </span>
-                <span className="mt-0.5 block text-xs tabular-nums text-muted-foreground">
-                  practice {d.practice_mean.toFixed(1)} → floor{" "}
-                  {d.floor_mean.toFixed(1)}
+                <span className="mt-0.5 block text-xs text-muted-foreground">
+                  {quadrantLine[d.quadrant]}
                 </span>
               </span>
               <Badge
@@ -142,51 +148,19 @@ export function GapQuadrant({
               key={active.dimension}
               className="msg-in rounded-xl border bg-muted/40 p-4"
             >
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-sm font-semibold">
-                  {dimensionShort[active.dimension]} —{" "}
-                  <span
-                    className={
-                      toneClasses[quadrantMeta[active.quadrant].tone].text
-                    }
-                  >
-                    {quadrantMeta[active.quadrant].label}
-                  </span>
-                </p>
-                <Badge variant="outline" className="shrink-0">
-                  gap {formatGap(active.gap)}
-                </Badge>
-              </div>
+              <p className="text-sm font-semibold">
+                {dimensionShort[active.dimension]} —{" "}
+                <span
+                  className={
+                    toneClasses[quadrantMeta[active.quadrant].tone].text
+                  }
+                >
+                  {quadrantMeta[active.quadrant].label}
+                </span>
+              </p>
               <p className="mt-1 text-sm text-muted-foreground">
                 {active.reading}
               </p>
-              <div className="mt-3 flex items-end gap-6 text-xs">
-                <div>
-                  <p className="text-muted-foreground">Practice</p>
-                  <p className="text-lg font-bold">
-                    {active.practice_mean.toFixed(1)}
-                  </p>
-                  <p className="text-muted-foreground">
-                    n = {active.practice_n}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Floor</p>
-                  <p className="text-lg font-bold">
-                    {active.floor_mean.toFixed(1)}
-                  </p>
-                  <p className="text-muted-foreground">n = {active.floor_n}</p>
-                </div>
-                {/* A slope is only claimed from ≥ 3 weekly points (LLD-D §4.4);
-                    fewer than that and the trend label is withheld. */}
-                {active.trend.length >= 3 && (
-                  <div className="ml-auto flex items-center gap-1 text-muted-foreground">
-                    <TrendingUp className="size-3.5" />
-                    {active.trend.map((t) => t.gap).join(" → ")}
-                    <ArrowUpRight className="size-3.5 text-rose-400" />
-                  </div>
-                )}
-              </div>
             </div>
           )}
 

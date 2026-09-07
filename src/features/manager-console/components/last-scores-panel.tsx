@@ -2,68 +2,50 @@
 
 import { useEffect, useState } from "react";
 import { Lock } from "lucide-react";
-import { ContractError } from "@/lib/api/client";
 import { managerApi } from "@/features/manager-console/api/managerApi";
 import { dimensionShort } from "@/lib/format";
-import type { ScoresResponse, StaffScoreRow } from "@/lib/types";
+import type { StaffScoreRow } from "@/lib/types";
 
 /**
- * HLD §6.1/§10: the last-three-scores panel. Reads the staff member's two
- * evidence streams (practice and floor) in parallel. Practice history is
- * gated by the frozen contract: until the manager has logged their own floor
- * observation of this person, `source=practice` answers 409 — the panel then
- * shows the unlock hint instead of the numbers.
+ * HLD §6.1/§10: the last-three-scores panel on the gap page, manager view.
+ * Only the floor stream — the manager's own observations — is read. The
+ * practice side is a privacy note: practice scores are never shown to a
+ * manager, raw or aggregated, at any time. The system compares the streams
+ * silently and only surfaces the coaching insight. (The frozen 409 gate on
+ * `source=practice` still stands for other callers; the manager console no
+ * longer asks for practice at all.)
  */
 
-type StreamState =
+type FloorState =
   | { kind: "loading" }
   | { kind: "error" }
-  | { kind: "locked" }
   | { kind: "ready"; rows: StaffScoreRow[] };
-
-function resolveStream(
-  result: PromiseSettledResult<ScoresResponse>
-): StreamState {
-  if (result.status === "fulfilled") {
-    const rows = [...result.value.scores].sort((a, b) =>
-      b.recorded_at.localeCompare(a.recorded_at)
-    );
-    return { kind: "ready", rows };
-  }
-  if (
-    result.reason instanceof ContractError &&
-    result.reason.problem.status === 409
-  ) {
-    return { kind: "locked" };
-  }
-  return { kind: "error" };
-}
 
 const RECENT_LIMIT = 3;
 
-const AMBER_TEXT = "text-[oklch(0.84_0.11_85)]";
-const ROSE_TEXT = "text-[oklch(0.78_0.11_35)]";
-const AMBER_PILL =
-  "bg-[oklch(0.79_0.12_80)]/15 text-[oklch(0.84_0.11_85)] border-[oklch(0.79_0.12_80)]/30";
+const AMBER_TEXT = "text-[oklch(0.86_0.07_74)]";
+const ROSE_TEXT = "text-[oklch(0.8_0.08_30)]";
 const ROSE_PILL =
-  "bg-[oklch(0.69_0.13_35)]/15 text-[oklch(0.78_0.11_35)] border-[oklch(0.69_0.13_35)]/30";
+  "bg-[oklch(0.68_0.09_30)]/15 text-[oklch(0.8_0.08_30)] border-[oklch(0.68_0.09_30)]/30";
 
 export function LastScoresPanel({ staffId }: { staffId: string }) {
-  const [practice, setPractice] = useState<StreamState>({ kind: "loading" });
-  const [floor, setFloor] = useState<StreamState>({ kind: "loading" });
+  const [floor, setFloor] = useState<FloorState>({ kind: "loading" });
 
   useEffect(() => {
     let cancelled = false;
-    setPractice({ kind: "loading" });
     setFloor({ kind: "loading" });
-    Promise.allSettled([
-      managerApi.getScores(staffId, "practice"),
-      managerApi.getScores(staffId, "floor"),
-    ]).then(([practiceResult, floorResult]) => {
-      if (cancelled) return;
-      setPractice(resolveStream(practiceResult));
-      setFloor(resolveStream(floorResult));
-    });
+    managerApi
+      .getScores(staffId, "floor")
+      .then((res) => {
+        if (cancelled) return;
+        const rows = [...res.scores].sort((a, b) =>
+          b.recorded_at.localeCompare(a.recorded_at)
+        );
+        setFloor({ kind: "ready", rows });
+      })
+      .catch(() => {
+        if (!cancelled) setFloor({ kind: "error" });
+      });
     return () => {
       cancelled = true;
     };
@@ -71,45 +53,39 @@ export function LastScoresPanel({ staffId }: { staffId: string }) {
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      <StreamCard
-        title="Practice history"
-        dotClass={AMBER_TEXT}
-        pillClass={AMBER_PILL}
-        state={practice}
-        empty="No practice scores yet — the first completed scenario appears here."
-      />
-      <StreamCard
-        title="Floor history"
-        dotClass={ROSE_TEXT}
-        pillClass={ROSE_PILL}
-        state={floor}
-        empty="No floor scores yet — they fill in once an observation is logged."
-      />
+      {/* Practice side: a privacy note, not a stream. Practice scores stay
+          with the staff member — the manager's read is the insight only. */}
+      <div className="rounded-xl border bg-card p-4">
+        <div className="flex items-center gap-2">
+          <span
+            aria-hidden
+            className={`size-2 rounded-full bg-current ${AMBER_TEXT}`}
+          />
+          <p className="text-sm font-semibold">Practice history</p>
+        </div>
+        <div className="mt-3 flex items-start gap-2 rounded-lg border border-dashed p-3">
+          <Lock className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            Practice history stays private — the system compares it silently
+            and only surfaces the coaching insight.
+          </p>
+        </div>
+      </div>
+
+      <StreamCard state={floor} />
     </div>
   );
 }
 
-function StreamCard({
-  title,
-  dotClass,
-  pillClass,
-  state,
-  empty,
-}: {
-  title: string;
-  dotClass: string;
-  pillClass: string;
-  state: StreamState;
-  empty: string;
-}) {
+function StreamCard({ state }: { state: FloorState }) {
   return (
     <div className="rounded-xl border bg-card p-4">
       <div className="flex items-center gap-2">
         <span
           aria-hidden
-          className={`size-2 rounded-full bg-current ${dotClass}`}
+          className={`size-2 rounded-full bg-current ${ROSE_TEXT}`}
         />
-        <p className="text-sm font-semibold">{title}</p>
+        <p className="text-sm font-semibold">Floor history</p>
         {state.kind === "ready" && state.rows.length > 0 && (
           <span className="ml-auto text-[10px] text-muted-foreground">
             {state.rows.length > RECENT_LIMIT
@@ -121,27 +97,20 @@ function StreamCard({
       </div>
 
       {state.kind === "loading" && (
-        <p className="mt-3 text-xs text-muted-foreground">Reading scores…</p>
+        <p className="mt-3 text-xs text-muted-foreground">
+          Reading your observations…
+        </p>
       )}
 
       {state.kind === "error" && (
         <p className="mt-3 rounded-lg border border-dashed p-3 text-xs text-muted-foreground">
-          Could not read scores right now — refresh to retry.
+          Could not read the floor record right now — refresh to retry.
         </p>
-      )}
-
-      {state.kind === "locked" && (
-        <div className="mt-3 flex items-start gap-2 rounded-lg border border-dashed border-amber-400/40 bg-amber-500/10 p-3">
-          <Lock className="mt-0.5 size-3.5 shrink-0 text-amber-300" />
-          <p className="text-xs leading-relaxed text-amber-200/90">
-            Log a floor observation first — practice history unlocks after.
-          </p>
-        </div>
       )}
 
       {state.kind === "ready" && state.rows.length === 0 && (
         <p className="mt-3 rounded-lg border border-dashed p-3 text-xs text-muted-foreground">
-          {empty}
+          No floor scores yet — they fill in once an observation is logged.
         </p>
       )}
 
@@ -156,7 +125,7 @@ function StreamCard({
                 <p className="truncate text-sm font-medium">
                   {dimensionShort[row.dimension]}
                 </p>
-                <p className="font-mono text-[10px] text-muted-foreground">
+                <p className="text-[10px] tabular-nums text-muted-foreground">
                   {row.recorded_at.slice(0, 10)}
                 </p>
               </div>
@@ -164,7 +133,7 @@ function StreamCard({
                 className={`rounded-md border px-2 py-0.5 text-sm font-bold tabular-nums ${
                   row.level === null
                     ? "border-transparent bg-muted text-muted-foreground"
-                    : pillClass
+                    : ROSE_PILL
                 }`}
               >
                 {row.level ?? "—"}

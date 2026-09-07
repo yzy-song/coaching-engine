@@ -555,22 +555,19 @@ function weeklyTrendFor(
   return trend;
 }
 
-/** One sentence per quadrant, carrying the row's own numbers — readings are
- * derived copy, never invented data. */
+/** One qualitative sentence per quadrant — the reading a manager acts on is
+ * the coaching insight, never the raw numbers behind it. */
 function readingFor(row: TeamGapRow): string {
-  const p = row.practice_mean;
-  const f = row.floor_mean;
-  const g = row.gap;
   if (row.quadrant === "blocked") {
-    return `Practice ${p} vs floor ${f}, gap ${g}. Performs it in practice and loses it live — that points at authority or pressure, not skill.`;
+    return "Performs it in practice and loses it live — that points at authority or pressure, not skill.";
   }
   if (row.quadrant === "skill_gap") {
-    return `Practice ${p} vs floor ${f}, gap ${g}. Both streams below the 3.5 bar — targeted practice is the right next step.`;
+    return "Both streams are still building — targeted practice is the right next step.";
   }
   if (row.quadrant === "recalibrate") {
-    return `Practice ${p} sits below a floor of ${f}. Check the rubric and the scenario, not the person.`;
+    return "The floor runs ahead of practice — check the rubric and the scenario, not the person.";
   }
-  return `Practice ${p} and floor ${f} align — transferring cleanly.`;
+  return "Practice and the floor align — the skill is transferring cleanly.";
 }
 
 /** The full TransferGap for one roster staff member: dataset rows in
@@ -1074,9 +1071,6 @@ function seededPendingRecommendations(): Recommendation[] {
       const rosterId = rosterIdOf(row.staff_id);
       const dimension = row.dimension;
       const lower = dimensionCopyLabel(dimension);
-      const practiceStr = String(row.practice_mean);
-      const floorStr = String(row.floor_mean);
-      const gapStr = String(round2(row.gap!));
       const latestDate = latestObservationDateOf(rosterId);
       const name = staffNameOf(rosterId);
       const blocked = row.quadrant === "blocked";
@@ -1105,7 +1099,7 @@ function seededPendingRecommendations(): Recommendation[] {
       }
       citations.push({
         kind: "metric",
-        claim: `practice ${practiceStr} vs floor ${floorStr} — a ${gapStr} transfer gap on ${lower}`,
+        claim: `a transfer gap on ${lower} — the floor trails practice`,
         source_ref: `metric:gap:${dimension}`,
       });
 
@@ -1117,11 +1111,11 @@ function seededPendingRecommendations(): Recommendation[] {
         staff_id: rosterId,
         classification,
         headline: blocked
-          ? `${name} performs ${lower} in practice and drops it on the floor — practice ${practiceStr} vs floor ${floorStr}.`
-          : `${name} sits at ${practiceStr} in practice and ${floorStr} on the floor — the skill is still building.`,
+          ? `${name} performs ${lower} in practice and drops it on the floor.`
+          : `${name}'s ${lower} is still building — in practice and on the floor.`,
         body: blocked
-          ? `Practice ${practiceStr} vs floor ${floorStr}, gap ${gapStr}. The skill demonstrably exists in practice; on the floor it did not appear. That points at authority or pressure, not a training gap — more practice would miss the point.`
-          : `Practice ${practiceStr} vs floor ${floorStr}, gap ${gapStr}. Neither stream shows the skill yet — this is the one case where practice is the answer.`,
+          ? "The skill demonstrably exists in practice; on the floor it did not appear. That points at authority or pressure, not a training gap — more practice would miss the point."
+          : "Neither stream shows the skill yet — this is the one case where practice is the answer.",
         suggested_action: blocked
           ? `Confirm what ${name} believes they are allowed to do on ${lower} and what the floor pressure was. Do not assign further practice.`
           : `Assign the starter scenario on ${lower} this week and review the evidence spans together.`,
@@ -1312,39 +1306,40 @@ function buildRecommendationForObservation(
         ? ("process" as const)
         : ("behavioural" as const);
 
-  const practiceMean = primary.practiceMean?.toFixed(1) ?? "—";
-  const floorMean = primary.floorMean?.toFixed(1) ?? "—";
-  const gapValue =
-    primary.practiceMean !== null && primary.floorMean !== null
-      ? round3(primary.practiceMean - primary.floorMean)
-      : null;
+  const dimLabel =
+    primary.dimension === "service_recovery"
+      ? "Service recovery"
+      : primary.dimension;
 
   const template =
     primary.quadrant === "blocked"
       ? {
           headline:
             "They performed this in practice and did not on the floor. That points at authority or pressure, not a training gap.",
-          body: `${primary.dimension === "service_recovery" ? "Service recovery" : primary.dimension} — practice ${practiceMean} vs floor ${floorMean}${gapValue !== null ? `, gap ${gapValue.toFixed(1)}` : ""}. The skill demonstrably exists in practice; on the floor it did not appear. More practice would miss the point.`,
+          body: `${dimLabel} — practice looks fine here; on the floor it did not appear. More practice would miss the point.`,
           suggested_action:
             "Confirm what this person believes they are allowed to offer and what the floor pressure was. Do not assign further practice.",
         }
       : primary.quadrant === "skill_gap"
         ? {
-            headline: "Practice and floor both show this skill still building — targeted practice is the right next step.",
-            body: `${primary.dimension === "service_recovery" ? "Service recovery" : primary.dimension} — practice ${practiceMean} and floor ${floorMean}. The gap is small because neither stream shows the skill yet. This is the one case where practice is the answer.`,
+            headline:
+              "Practice and floor both show this skill still building — targeted practice is the right next step.",
+            body: `${dimLabel} — neither stream shows the skill yet. This is the one case where practice is the answer.`,
             suggested_action:
               "Assign the starter scenario for this dimension this week and review the evidence spans together.",
           }
         : primary.quadrant === "recalibrate"
           ? {
-              headline: "Strong on the floor but weak in practice — check the rubric and the scenario, not the person.",
-              body: `${primary.dimension === "service_recovery" ? "Service recovery" : primary.dimension} — practice ${practiceMean} vs floor ${floorMean}. When the floor out-scores practice, it is usually a signal about our scoring.`,
+              headline:
+                "Strong on the floor but weak in practice — check the rubric and the scenario, not the person.",
+              body: `${dimLabel} — when the floor runs ahead of practice, it is usually a signal about our scoring.`,
               suggested_action:
                 "Review the rubric anchors and the practice scenario before coaching the person.",
             }
           : {
-              headline: "Practice is transferring to the floor on this dimension.",
-              body: `${primary.dimension === "service_recovery" ? "Service recovery" : primary.dimension} — practice ${practiceMean} and floor ${floorMean} align. The skill is holding under real conditions.`,
+              headline:
+                "Practice is transferring to the floor on this dimension.",
+              body: `${dimLabel} — practice and the floor align. The skill is holding under real conditions.`,
               suggested_action:
                 "Stretch them: use them as a peer coach or promote the behaviour in the next briefing.",
             };
@@ -1379,10 +1374,17 @@ function buildRecommendationForObservation(
     source_ref: `obs:${observation.id}:what_happened`,
     quoted_span: observation.what_happened,
   });
-  if (gapValue !== null) {
+  if (primary.practiceMean !== null && primary.floorMean !== null) {
+    const lowerDim = dimensionCopyLabel(primary.dimension);
+    const claim =
+      primary.quadrant === "competent"
+        ? `practice and the floor align on ${lowerDim} — no transfer gap`
+        : primary.quadrant === "recalibrate"
+          ? `a transfer gap on ${lowerDim} — practice trails the floor`
+          : `a transfer gap on ${lowerDim} — the floor trails practice`;
     citations.push({
       kind: "metric",
-      claim: `transfer gap on ${primary.dimension.replace("_", " ")} is ${gapValue.toFixed(1)}`,
+      claim,
       source_ref: `metric:gap:${primary.dimension}`,
     });
   }

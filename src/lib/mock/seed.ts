@@ -509,7 +509,7 @@ export const diegoRecommendation: Recommendation = {
   classification: "policy",
   headline:
     "This is not a training gap. The front-office standard gives Diego no recovery authority to use.",
-  body: "Diego scored 4/5 on service recovery in practice on both 29 and 30 August, running the acknowledge-then-offer sequence correctly each time. On the floor at 3pm on 29 August he froze and escalated without attempting recovery. Practice 4.0 vs floor 2.0 — the gap is 2.0 and has not moved since. The behaviour he skipped is the one he demonstrably can perform, which points at authority rather than skill: your front-office complaint standard sets no discretionary recovery limit, while the F&B standard does.",
+  body: "Diego ran the acknowledge-then-offer sequence correctly in practice on both 29 and 30 August. On the floor at 3pm on 29 August he froze and escalated without attempting recovery — and the picture has not moved since. The behaviour he skipped is the one he demonstrably can perform, which points at authority rather than skill: your front-office complaint standard sets no discretionary recovery limit, while the F&B standard does.",
   suggested_action:
     "Set and communicate a discretionary recovery limit for front desk. Do not assign further service recovery practice.",
   calibration: {
@@ -522,7 +522,7 @@ export const diegoRecommendation: Recommendation = {
   citations: [
     {
       kind: "attempt_turn",
-      claim: "scored 4/5 on service recovery in practice on 30 August",
+      claim: "practice looked confident on service recovery on 30 August",
       source_ref: "attempt:att-005:turn:6",
       quoted_span:
         "I'm sorry your room isn't ready after that journey — let me find out what we can do for you right now, and I'll stay with you until it's sorted.",
@@ -543,7 +543,7 @@ export const diegoRecommendation: Recommendation = {
     },
     {
       kind: "metric",
-      claim: "practice 4.0 vs floor 2.0 — a 2.0 transfer gap, held since 29 August",
+      claim: "a transfer gap on service recovery — the floor trails practice, held since 29 August",
       source_ref: "metric:gap:service_recovery",
     },
   ],
@@ -558,7 +558,7 @@ export const abstainedRecommendation: Recommendation = {
   staff_id: "staff-010",
   classification: "behavioural",
   headline: "Not enough evidence yet for grounded coaching.",
-  body: "Aoife is scoring 5.0 on anticipation in practice (two runs), but she has no floor observation yet — a transfer-gap reading needs both streams, so this one is left unscored rather than guessed.",
+  body: "Aoife&apos;s anticipation practice has looked strong, but she has no floor observation yet — a transfer-gap reading needs both streams, so this one is left unscored rather than guessed.",
   suggested_action: "",
   calibration: {
     dimension: "anticipation",
@@ -579,8 +579,8 @@ export const chloeRecommendation: Recommendation = {
   staff_id: "staff-012",
   classification: "behavioural",
   headline:
-    "Chloe's allergen script is five-star in practice; the same care doesn't survive a live wine question.",
-  body: "In practice (20 August) she gives the full careful allergen reply — 5.0 on communication. On the floor on 28 August, during a live wine-complaint exchange, the exchange ran shorter and scored 3.0: efficient, but the guest-facing detail disappeared. Practice 5.0 vs floor 3.0 — a 2.0 gap, blocked. The knowledge is there; the floor version needs the same care under pressure.",
+    "Chloe's allergen script is at its strongest in practice; the same care doesn't survive a live wine question.",
+  body: "In practice (20 August) she gives the full careful allergen reply, complete with the guest-facing detail. On the floor on 28 August, during a live wine-complaint exchange, the exchange ran shorter and scored 3.0: efficient, but that detail disappeared. The knowledge is there; the floor version needs the same care under pressure.",
   suggested_action:
     "One 5-minute roleplay on the first sentence of a live recommendation, then re-observe next shift.",
   calibration: {
@@ -593,7 +593,7 @@ export const chloeRecommendation: Recommendation = {
   citations: [
     {
       kind: "attempt_turn",
-      claim: "scored 5.0 on communication in the allergen practice on 20 August",
+      claim: "practice looked confident on communication in the 20 August allergen run",
       source_ref: "attempt:att-042:turn:3",
       quoted_span:
         "Of course — let me check the allergen sheet before I place it, and I'll bring it back to you within a minute.",
@@ -607,7 +607,7 @@ export const chloeRecommendation: Recommendation = {
     },
     {
       kind: "metric",
-      claim: "practice 5.0 vs floor 3.0 — a 2.0 gap on communication",
+      claim: "a transfer gap on communication — the floor trails practice",
       source_ref: "metric:gap:communication",
     },
   ],
@@ -624,7 +624,7 @@ export const bogdanRecommendation: Recommendation = {
   classification: "behavioural",
   headline:
     "Bogdan's careful allergen replies shorten when a live guest pushes back.",
-  body: "His allergen practice on 19 August is careful and precise — 4.0 on communication. Live on 10 September, a guest unhappy with a wine recommendation got the efficient version and the exchange scored 3.0. Practice 4.0 vs floor 3.0 — a 1.0 gap, blocked. The words are in the practice stream; the floor needs the same precision under time pressure.",
+  body: "His allergen practice on 19 August is careful and precise. Live on 10 September, a guest unhappy with a wine recommendation got the efficient version and the exchange scored 3.0. The words are in the practice stream; the floor needs the same precision under time pressure.",
   suggested_action:
     "Assign the wine-recommendation starter once with the communication anchors visible, then observe again next shift.",
   calibration: {
@@ -637,7 +637,7 @@ export const bogdanRecommendation: Recommendation = {
   citations: [
     {
       kind: "attempt_turn",
-      claim: "scored 4.0 on communication in the allergen practice on 19 August",
+      claim: "practice looked careful on communication in the 19 August allergen run",
       source_ref: "attempt:att-044:turn:2",
       quoted_span:
         "I'll double-check the kitchen on that for you — give me one moment and I'll come back with the answer.",
@@ -651,7 +651,7 @@ export const bogdanRecommendation: Recommendation = {
     },
     {
       kind: "metric",
-      claim: "practice 4.0 vs floor 3.0 — a 1.0 gap on communication",
+      claim: "a transfer gap on communication — the floor trails practice",
       source_ref: "metric:gap:communication",
     },
   ],

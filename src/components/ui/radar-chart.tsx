@@ -74,7 +74,7 @@ export function RadarChart({
             key={i}
             points={polygonPoints(((i + 1) / RINGS) * R)}
             fill="none"
-            stroke="oklch(1 0 0 / 7%)"
+            stroke="oklch(0.96 0.015 90 / 7%)"
           />
         ))}
 
@@ -87,7 +87,7 @@ export function RadarChart({
               y1={CY}
               x2={outer.x}
               y2={outer.y}
-              stroke="oklch(1 0 0 / 10%)"
+              stroke="oklch(0.96 0.015 90 / 10%)"
             />
           );
         })}
@@ -216,7 +216,13 @@ export function RadarChart({
               <tr key={a}>
                 <th scope="row">{dimensionShort[a]}</th>
                 {series.map((s) => (
-                  <td key={s.id}>{s.values[a] == null ? "no data" : s.values[a]}</td>
+                  <td key={s.id}>
+                  {s.values[a] == null
+                    ? "no data"
+                    : showValues
+                      ? s.values[a]
+                      : "not shown"}
+                </td>
                 ))}
               </tr>
             ))}

@@ -72,7 +72,7 @@ export default async function VerifyQueuePage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
-                <CheckCircle2 className="size-5 text-[oklch(0.7_0.11_150)]" />
+                <CheckCircle2 className="size-5 text-[oklch(0.76_0.07_150)]" />
                 Queue clear
               </CardTitle>
             </CardHeader>

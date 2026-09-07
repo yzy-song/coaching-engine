@@ -101,7 +101,8 @@ export default async function GapPage(
                     dashed: true,
                   },
                 ]}
-                caption={`Scale 0–5 · ${gap.dimensions.length} of ${AXES.length} dimensions scored — unscored axes sit at the centre`}
+                caption="Where the dashed line falls inside the solid one, the floor is trailing practice — unscored axes sit at the centre"
+                showValues={false}
               />
             </CardContent>
           </Card>

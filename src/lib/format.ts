@@ -25,6 +25,24 @@ export const dimensionShort: Record<BarsDimension, string> = {
   service_recovery: "Recovery",
 };
 
+/** One qualitative word per level — the only vocabulary staff-facing surfaces
+ * may use for a level. Numeric levels stay manager-side. */
+export const levelLabels: Record<number, string> = {
+  1: "Finding this hard",
+  2: "Early days",
+  3: "Getting there",
+  4: "Confident here",
+  5: "Leading here",
+};
+
+/** The qualitative word for a scored level, or null when the dimension was
+ * not scored. */
+export function levelWord(level: number | null): string | null {
+  return level === null || level < 1 || level > 5
+    ? null
+    : levelLabels[level];
+}
+
 export interface QuadrantMeta {
   label: string;
   headline: string;

@@ -15,7 +15,6 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { CountUp } from "@/components/count-up";
 import { Reveal } from "@/components/reveal";
 import { ScrollProgress } from "@/components/scroll-progress";
 import {
@@ -38,50 +37,6 @@ function dayLabel(isoDate: string): string {
     ? isoDate.slice(0, 10)
     : `${MONTH_SHORT[date.getUTCMonth()]} ${date.getUTCDate()}`;
 }
-
-const loopSteps = [
-  {
-    icon: MonitorSmartphone,
-    title: "Observe",
-    text: "Staff practise AI-scored scenarios; managers log 20-second floor observations. Two streams, never one.",
-  },
-  {
-    icon: BrainCircuit,
-    title: "Reason",
-    text: "The agent combines both streams into one reading of the transfer gap — where practice and floor diverge.",
-  },
-  {
-    icon: BookOpen,
-    title: "Remember",
-    text: "Every claim carries its source: the SOP clause, the staff member's own words, the manager who saw it.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Verify",
-    text: "Nothing routes on AI output alone. A manager confirms, corrects or rejects every draft.",
-  },
-  {
-    icon: Gauge,
-    title: "Calibrate",
-    text: "Every verdict trains the agreement metric — the number you can watch move, live.",
-  },
-];
-
-const stats: { value: number | string; suffix?: string; label: string }[] = [
-  { value: 2, label: "independent data streams — practice and floor" },
-  { value: 0, label: "actions route without a human verdict" },
-  { value: 100, suffix: "%", label: "of claims cite a source you can open" },
-  { value: "k ≥ 5", label: "anonymity on every team insight" },
-];
-
-const narrative = [
-  "One shift, one gap, one verdict",
-  "Marta logs a 20-second observation",
-  "The agent drafts — cited, not guessed",
-  "Nothing routes without a human verdict",
-  "Calibration moves with every confirm",
-  "Staff see every record about them",
-];
 
 // The three citation chips show real seeded anchors, not invented ones: the
 // SOP chunk behind Diego's debrief, his quoted practice turn, and Marta's
@@ -197,88 +152,63 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* ── Narrative band ── */}
-        <section className="border-y border-border/60 bg-card/40 py-4">
-          <div className="flex overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]">
-            <div className="marquee flex w-max shrink-0 items-center">
-              {[0, 1].map((copy) => (
-                <div
-                  key={copy}
-                  aria-hidden={copy === 1}
-                  className="flex items-center"
-                >
-                  {narrative.map((item) => (
-                    <span
-                      key={item}
-                      className="flex items-center gap-6 pr-6 text-[13px] font-medium text-muted-foreground"
-                    >
-                      {item}
-                      <span className="size-1 rounded-full bg-primary" />
-                    </span>
-                  ))}
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ── Stats ── */}
+        {/* ── Who this is for ── */}
         <section className="mx-auto max-w-5xl px-4">
-          <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border bg-border md:grid-cols-4">
-            {stats.map((stat, i) => (
-              <Reveal key={stat.label} delay={i * 80} className="bg-card">
-                <div className="p-6">
-                  <p className="font-mono text-3xl font-bold tabular-nums text-primary">
-                    {typeof stat.value === "number" ? (
-                      <CountUp value={stat.value} />
-                    ) : (
-                      stat.value
-                    )}
-                    {stat.suffix}
-                  </p>
-                  <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
-                    {stat.label}
-                  </p>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </section>
-
-        {/* ── The loop ── */}
-        <section className="mx-auto max-w-5xl px-4 pt-24">
-          <Reveal className="text-center">
+          <Reveal className="flex flex-col items-center text-center">
             <p className="text-xs font-semibold uppercase tracking-widest text-primary">
-              The loop
+              Who this is for
             </p>
             <h2 className="mt-2 text-2xl font-semibold tracking-tight md:text-3xl">
-              Observe → Reason → Remember → Verify → Calibrate
+              L&D leaders, GMs and HR managers at 4–5 star hotels
             </h2>
-            <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground">
-              Not a one-off training course — a loop that improves every time
-              a manager gives a verdict.
+            <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-muted-foreground md:text-base">
+              Hospitality has the highest staff turnover of any sector. Training
+              gets completed and checked off — yet it rarely shows up on the
+              floor, and most new managers have never been shown how to coach.
             </p>
           </Reveal>
-          <div className="mt-10 grid gap-3 md:grid-cols-5">
-            {loopSteps.map((step, i) => (
-              <Reveal key={step.title} delay={i * 90}>
-                <div className="group h-full rounded-2xl border bg-card p-5 transition-all hover:-translate-y-1 hover:border-primary/40 hover:shadow-[0_16px_44px_-18px_var(--primary)]">
-                  <div className="flex items-center justify-between">
-                    <div className="flex size-9 items-center justify-center rounded-xl bg-accent transition-colors group-hover:bg-primary/15">
-                      <step.icon className="size-4 text-primary" />
-                    </div>
-                    <span className="font-mono text-[11px] text-muted-foreground">
-                      0{i + 1}
-                    </span>
-                  </div>
-                  <p className="mt-3 text-sm font-semibold">{step.title}</p>
-                  <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
-                    {step.text}
-                  </p>
+          <div className="mt-12 grid gap-4 md:grid-cols-3">
+            <Reveal className="h-full">
+              <div className="h-full rounded-2xl border bg-card p-6">
+                <div className="flex size-9 items-center justify-center rounded-xl bg-accent">
+                  <Eye className="size-4 text-primary" />
                 </div>
-              </Reveal>
-            ))}
+                <p className="mt-3 text-sm font-semibold leading-relaxed">
+                  Makes readiness visible for the first time
+                </p>
+              </div>
+            </Reveal>
+            <Reveal delay={90} className="h-full">
+              <div className="h-full rounded-2xl border bg-card p-6">
+                <div className="flex size-9 items-center justify-center rounded-xl bg-accent">
+                  <Gauge className="size-4 text-primary" />
+                </div>
+                <p className="mt-3 text-sm font-semibold leading-relaxed">
+                  Speeds up how fast someone becomes confident on the job
+                </p>
+              </div>
+            </Reveal>
+            <Reveal delay={180} className="h-full">
+              <div className="h-full rounded-2xl border bg-card p-6">
+                <div className="flex size-9 items-center justify-center rounded-xl bg-accent">
+                  <MessageSquareQuote className="size-4 text-primary" />
+                </div>
+                <p className="mt-3 text-sm font-semibold leading-relaxed">
+                  Gives managers a consistent way to coach instead of relying on
+                  gut feel
+                </p>
+              </div>
+            </Reveal>
           </div>
+          <Reveal delay={120} className="mt-4">
+            <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-primary/25 bg-accent/25 px-6 py-3.5 text-center sm:flex-row sm:gap-3">
+              <ShieldCheck className="size-4 shrink-0 text-primary" />
+              <p className="text-[13px] font-medium text-primary">
+                Turnover is something we track as a result, not something we
+                promise.
+              </p>
+            </div>
+          </Reveal>
         </section>
 
         {/* ── Bento grid ── */}
@@ -349,7 +279,7 @@ export default function LandingPage() {
                       className="flex items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2"
                     >
                       <Icon className="size-3.5 shrink-0 text-primary" />
-                      <span className="min-w-0 truncate font-mono text-[11px] text-muted-foreground">
+                      <span className="min-w-0 truncate text-[11px] tabular-nums text-muted-foreground">
                         {text}
                       </span>
                     </div>
@@ -360,8 +290,8 @@ export default function LandingPage() {
 
             <Reveal className="md:col-span-2">
               <div className="h-full rounded-2xl border bg-card p-6">
-                <div className="flex size-9 items-center justify-center rounded-xl bg-[oklch(0.66_0.11_150)]/15">
-                  <ShieldCheck className="size-4 text-[oklch(0.78_0.1_150)]" />
+                <div className="flex size-9 items-center justify-center rounded-xl bg-[oklch(0.68_0.06_150)]/15">
+                  <ShieldCheck className="size-4 text-[oklch(0.8_0.07_150)]" />
                 </div>
                 <p className="mt-3 text-sm font-semibold">Human-in-the-loop</p>
                 <p className="mt-1.5 text-[13px] leading-relaxed text-muted-foreground">
@@ -381,7 +311,7 @@ export default function LandingPage() {
                   The agreement between the agent's read and the manager's
                   verdict — updated with every decision.
                 </p>
-                <p className="mt-4 font-mono text-2xl font-bold tabular-nums text-primary">
+                <p className="mt-4 text-2xl font-bold tabular-nums text-primary">
                   0.840 <ArrowRight className="inline size-4 text-muted-foreground" /> 0.846
                 </p>
                 <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
@@ -395,8 +325,8 @@ export default function LandingPage() {
 
             <Reveal delay={180} className="md:col-span-2">
               <div className="flex h-full flex-col rounded-2xl border bg-card p-6">
-                <div className="flex size-9 items-center justify-center rounded-xl bg-[oklch(0.64_0.07_340)]/15">
-                  <GraduationCap className="size-4 text-[oklch(0.76_0.07_340)]" />
+                <div className="flex size-9 items-center justify-center rounded-xl bg-[oklch(0.58_0.05_120)]/15">
+                  <GraduationCap className="size-4 text-[oklch(0.8_0.06_120)]" />
                 </div>
                 <p className="mt-3 text-sm font-semibold">
                   Where research stops, we start
@@ -467,19 +397,19 @@ export default function LandingPage() {
 function Background() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-      <div className="absolute inset-0 [background-image:linear-gradient(to_right,oklch(1_0_0/4%)_1px,transparent_1px),linear-gradient(to_bottom,oklch(1_0_0/4%)_1px,transparent_1px)] [background-size:64px_64px] [mask-image:radial-gradient(ellipse_75%_60%_at_50%_0%,black,transparent)]" />
+      <div className="absolute inset-0 [background-image:linear-gradient(to_right,oklch(0.95_0.015_90/5%)_1px,transparent_1px),linear-gradient(to_bottom,oklch(0.95_0.015_90/5%)_1px,transparent_1px)] [background-size:64px_64px] [mask-image:radial-gradient(ellipse_75%_60%_at_50%_0%,oklch(0.2_0.02_55),transparent)]" />
       <div className="aurora-drift absolute -top-32 left-1/4 size-[26rem] rounded-full bg-primary/25 opacity-60 blur-3xl dark:opacity-100" />
       <div
         className="aurora-drift absolute -top-20 right-[12%] size-96 rounded-full opacity-50 blur-3xl dark:opacity-90"
         style={{
-          backgroundColor: "oklch(0.63 0.11 45 / 0.5)",
+          backgroundColor: "oklch(0.64 0.06 40 / 0.42)",
           animationDelay: "-6s",
         }}
       />
       <div
         className="aurora-drift absolute top-[42rem] -left-32 size-[30rem] rounded-full opacity-40 blur-3xl dark:opacity-70"
         style={{
-          backgroundColor: "oklch(0.79 0.12 80 / 0.4)",
+          backgroundColor: "oklch(0.76 0.06 75 / 0.32)",
           animationDelay: "-12s",
         }}
       />

@@ -89,7 +89,7 @@ export default async function InsightsPage() {
           Window {insights.window.start} → {insights.window.end}
         </span>
         <span className="flex items-center gap-1.5 rounded-full bg-muted px-3 py-1 text-muted-foreground">
-          <ShieldCheck className="size-3.5 text-[oklch(0.7_0.11_150)]" />
+          <ShieldCheck className="size-3.5 text-[oklch(0.76_0.07_150)]" />
           k-anonymity threshold: {insights.k_threshold}
         </span>
       </div>
@@ -134,8 +134,8 @@ export default async function InsightsPage() {
                     <span
                       className={`inline-flex items-center gap-1 rounded-full px-3 py-1 font-semibold ${
                         trend.direction === "up"
-                          ? "bg-rose-500/15 text-rose-300"
-                          : "bg-amber-500/15 text-amber-300"
+                          ? "bg-[oklch(0.62_0.09_30)]/15 text-[oklch(0.8_0.08_30)]"
+                          : "bg-[oklch(0.72_0.08_70)]/15 text-[oklch(0.85_0.07_74)]"
                       }`}
                     >
                       {trend.direction === "up" ? (

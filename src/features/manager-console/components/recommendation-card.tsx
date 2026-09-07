@@ -22,9 +22,9 @@ const citationKindFallback: Partial<Record<Citation["kind"], string>> = {
 };
 
 const classificationTone: Record<string, string> = {
-  behavioural: "bg-amber-500/10 text-amber-300 border-amber-400/30",
-  process: "bg-[oklch(0.64_0.07_340)]/10 text-[oklch(0.76_0.07_340)] border-[oklch(0.64_0.07_340)]/30",
-  policy: "bg-rose-500/10 text-rose-300 border-rose-400/30",
+  behavioural: "bg-[oklch(0.7_0.08_70)]/10 text-[oklch(0.85_0.07_74)] border-[oklch(0.78_0.07_72)]/30",
+  process: "bg-[oklch(0.58_0.05_120)]/10 text-[oklch(0.8_0.06_120)] border-[oklch(0.58_0.05_120)]/30",
+  policy: "bg-[oklch(0.62_0.09_30)]/10 text-[oklch(0.8_0.08_30)] border-[oklch(0.68_0.09_30)]/30",
 };
 
 export function RecommendationCard({
@@ -49,7 +49,7 @@ export function RecommendationCard({
               {recommendation.citations.length} cited claims
             </span>
           )}
-          <span className="ml-auto font-mono text-[10px] text-muted-foreground">
+          <span className="ml-auto text-[10px] tabular-nums text-muted-foreground">
             {recommendation.trace_id}
           </span>
         </div>
@@ -112,10 +112,10 @@ export function RecommendationCard({
                 </button>
                 {open && citation.quoted_span && (
                   <div className="border-t px-3 py-3">
-                    <p className="font-mono text-xs leading-relaxed text-muted-foreground">
+                    <p className="text-xs leading-relaxed text-muted-foreground">
                       “{citation.quoted_span}”
                     </p>
-                    <p className="mt-1.5 font-mono text-[10px] text-muted-foreground/70">
+                    <p className="mt-1.5 text-[10px] tabular-nums text-muted-foreground/70">
                       {citation.source_ref}
                     </p>
                   </div>

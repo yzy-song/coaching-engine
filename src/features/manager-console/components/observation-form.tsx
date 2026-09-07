@@ -5,6 +5,7 @@ import { Lock, LockOpen, Timer } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { BarsLevelPicker } from "@/features/manager-console/components/bars-level-picker";
 import { managerApi } from "@/features/manager-console/api/managerApi";
 import { dimensionShort, observationDimensionLabels } from "@/lib/format";
 import type {
@@ -16,14 +17,18 @@ import type {
 /**
  * The manager's observe surface, redesigned as a quick capture with a record
  * anchor: one card on top to log a staff member's floor moment (staff chip,
- * dimension, BARS level, optional one-line note), and the tapped staff
- * member's existing floor observations beside it — so the manager sees what
- * is already on the record before their judgement lands.
+ * kind of moment, dimension, BARS level as a description, optional one-line
+ * note), and the tapped staff member's existing floor observations beside it
+ * — so the manager sees what is already on the record before their judgement
+ * lands.
  *
- * Submission keeps the observation route contract: one rated dimension per
- * capture, an Idempotency-Key on the write (double tap on hotel wifi cannot
- * log twice), and the page's own feedback line instead of a redirect — the
- * manager can keep capturing for the rest of the shift.
+ * Picking the kind of moment PRESELECTS the dimension most likely at play
+ * (a preset, never a lock — the manager taps any chip to adjust, or moves
+ * on straight to the level rows). Submission keeps the observation route
+ * contract: exactly ONE rated dimension per capture, an Idempotency-Key on
+ * the write (double tap on hotel wifi cannot log twice), and the page's own
+ * feedback line instead of a redirect — the manager can keep capturing for
+ * the rest of the shift.
  */
 
 const CAPTURE_DIMENSIONS: ObservationDimension[] = [
@@ -34,11 +39,41 @@ const CAPTURE_DIMENSIONS: ObservationDimension[] = [
   "anticipation",
 ];
 
-const LEVELS = [1, 2, 3, 4, 5] as const;
+/** Kinds of floor moment offered in the capture; each suggests the BARS
+ * dimensions that moment usually scores on. First suggestion is preselected
+ * into the dimension chip below, never locked. */
+type MomentKind = "guest_question" | "complaint" | "proactive" | "routine";
 
-const FLOOR_DOT = "text-[oklch(0.78_0.11_35)]";
+const MOMENT_TYPES: ReadonlyArray<{
+  id: MomentKind;
+  label: string;
+  suggest: readonly ObservationDimension[];
+}> = [
+  {
+    id: "guest_question",
+    label: "Guest question",
+    suggest: ["communication", "anticipation"],
+  },
+  {
+    id: "complaint",
+    label: "Complaint or problem",
+    suggest: ["service_recovery", "composure"],
+  },
+  {
+    id: "proactive",
+    label: "Proactive moment",
+    suggest: ["anticipation"],
+  },
+  {
+    id: "routine",
+    label: "Routine service",
+    suggest: ["communication"],
+  },
+];
+
+const FLOOR_DOT = "text-[oklch(0.8_0.08_30)]";
 const FLOOR_PILL =
-  "bg-[oklch(0.69_0.13_35)]/15 text-[oklch(0.78_0.11_35)] border-[oklch(0.69_0.13_35)]/30";
+  "bg-[oklch(0.68_0.09_30)]/15 text-[oklch(0.8_0.08_30)] border-[oklch(0.68_0.09_30)]/30";
 
 type RecordState =
   | { kind: "loading" }
@@ -51,6 +86,7 @@ const CHIP_IDLE = "border bg-card text-foreground hover:bg-muted/40";
 
 export function ObservationForm({ staff }: { staff: StaffMember[] }) {
   const [staffId, setStaffId] = useState(staff[0]?.id ?? "");
+  const [moment, setMoment] = useState<MomentKind | null>(null);
   const [dimension, setDimension] = useState<ObservationDimension | null>(null);
   const [level, setLevel] = useState<number | null>(null);
   const [note, setNote] = useState("");
@@ -61,6 +97,7 @@ export function ObservationForm({ staff }: { staff: StaffMember[] }) {
 
   const member = staff.find((s) => s.id === staffId) ?? staff[0];
   const selectedName = member?.name ?? "";
+  const momentMeta = MOMENT_TYPES.find((m) => m.id === moment) ?? null;
 
   // The record anchors follow the tapped chip and refresh after each submit.
   useEffect(() => {
@@ -85,6 +122,30 @@ export function ObservationForm({ staff }: { staff: StaffMember[] }) {
 
   const beginCapture = () => {
     if (loggedName !== null) setLoggedName(null);
+  };
+
+  /** Select a dimension; a level already picked on another dimension would
+   * silently name the wrong description row, so it clears on change. */
+  const pickDimension = (next: ObservationDimension) => {
+    if (next !== dimension) setLevel(null);
+    setDimension(next);
+    beginCapture();
+  };
+
+  /** Preselect the moment's first suggested dimension — adjustable, not a
+   * lock: the dimension chips and a fresh level pick still rule. */
+  const pickMoment = (next: MomentKind) => {
+    const kind = MOMENT_TYPES.find((m) => m.id === next);
+    if (!kind) return;
+    setMoment(next);
+    if (kind.suggest[0] !== dimension) setLevel(null);
+    setDimension(kind.suggest[0]);
+    beginCapture();
+  };
+
+  const pickLevel = (next: number) => {
+    setLevel(next);
+    beginCapture();
   };
 
   const handleSubmit = async () => {
@@ -114,6 +175,7 @@ export function ObservationForm({ staff }: { staff: StaffMember[] }) {
       if (!res.ok) throw new Error("Failed to log observation");
       await res.json();
       setLoggedName(selectedName);
+      setMoment(null);
       setDimension(null);
       setLevel(null);
       setNote("");
@@ -183,6 +245,39 @@ export function ObservationForm({ staff }: { staff: StaffMember[] }) {
 
           <div className="space-y-2">
             <p className="text-xs font-medium text-muted-foreground">
+              What kind of moment was it?
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {MOMENT_TYPES.map((m) => {
+                const selected = moment === m.id;
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => pickMoment(m.id)}
+                    className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
+                      selected ? CHIP_SELECTED : CHIP_IDLE
+                    }`}
+                  >
+                    {m.label}
+                  </button>
+                );
+              })}
+            </div>
+            {momentMeta !== null && (
+              <p className="text-[10px] text-muted-foreground">
+                Preselects{" "}
+                {momentMeta.suggest
+                  .map((d) => observationDimensionLabels[d])
+                  .join(" or ")}{" "}
+                — adjust in the next step.
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-xs font-medium text-muted-foreground">
               Which dimension?
             </p>
             <div className="flex flex-wrap gap-2">
@@ -193,10 +288,7 @@ export function ObservationForm({ staff }: { staff: StaffMember[] }) {
                     key={d}
                     type="button"
                     aria-pressed={selected}
-                    onClick={() => {
-                      setDimension(d);
-                      beginCapture();
-                    }}
+                    onClick={() => pickDimension(d)}
                     className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
                       selected ? CHIP_SELECTED : CHIP_IDLE
                     }`}
@@ -209,38 +301,22 @@ export function ObservationForm({ staff }: { staff: StaffMember[] }) {
           </div>
 
           <div className="space-y-2">
-            <div className="flex items-baseline justify-between gap-2">
-              <p className="text-xs font-medium text-muted-foreground">
-                Level — how well they handled it
+            <p className="text-xs font-medium text-muted-foreground">
+              Level — how well they handled it
+            </p>
+            {dimension === null ? (
+              <p className="rounded-lg border border-dashed p-3 text-xs text-muted-foreground">
+                Pick the moment type or a dimension above to see the level
+                descriptions.
               </p>
-              <p className="text-[10px] text-muted-foreground/70">BARS 1–5</p>
-            </div>
-            <div
-              role="radiogroup"
-              aria-label="Level"
-              className="grid grid-cols-5 gap-2"
-            >
-              {LEVELS.map((value) => {
-                const selected = level === value;
-                return (
-                  <button
-                    key={value}
-                    type="button"
-                    role="radio"
-                    aria-checked={selected}
-                    onClick={() => {
-                      setLevel(value);
-                      beginCapture();
-                    }}
-                    className={`rounded-lg border py-2.5 text-sm font-bold transition-colors ${
-                      selected ? CHIP_SELECTED : CHIP_IDLE
-                    }`}
-                  >
-                    {value}
-                  </button>
-                );
-              })}
-            </div>
+            ) : (
+              <BarsLevelPicker
+                dimension={dimension}
+                value={level}
+                onChange={pickLevel}
+                label="Level"
+              />
+            )}
           </div>
 
           <div className="space-y-2">
@@ -276,15 +352,15 @@ export function ObservationForm({ staff }: { staff: StaffMember[] }) {
               >
                 <LockOpen className="mt-0.5 size-4 shrink-0 text-primary" />
                 <p className="text-sm text-primary">
-                  Logging unlocks {loggedName}&apos;s practice history — your
-                  judgement lands first, the AI&apos;s read second.
+                  Logged — the transfer-gap read on {loggedName} now lands in
+                  the queue. Practice history stays private.
                 </p>
               </div>
             ) : (
               <p className="flex items-center justify-center gap-1.5 text-center text-xs text-muted-foreground">
                 <Lock className="size-3 shrink-0" />
-                Practice scores stay hidden until your observation is in — your
-                judgement first, the AI&apos;s read second.
+                Your observation comes first — practice history stays private
+                and the coaching read follows your judgement.
               </p>
             )}
           </div>
@@ -353,7 +429,7 @@ function RecordAnchors({
                 <p className="truncate text-sm font-medium">
                   {dimensionShort[row.dimension]}
                 </p>
-                <p className="font-mono text-[10px] text-muted-foreground">
+                <p className="text-[10px] tabular-nums text-muted-foreground">
                   {row.recorded_at.slice(0, 10)}
                 </p>
               </div>

@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { BarsLevelPicker } from "@/features/manager-console/components/bars-level-picker";
 import { dimensionShort } from "@/lib/format";
 import type {
   BarsDimension,
@@ -101,7 +102,7 @@ export function VerifyPanel({
       return;
     }
     if (verdict === "corrected" && managerLevel === null) {
-      toast.warning("Pick the level you actually saw before submitting.");
+      toast.warning("Pick the description that matches what you saw before submitting.");
       return;
     }
     setSubmitting(true);
@@ -160,17 +161,17 @@ export function VerifyPanel({
             className={`rounded-xl border p-4 text-left transition-all ${
               verdict === v
                 ? v === "confirmed"
-                  ? "border-[oklch(0.66_0.11_150)] bg-[oklch(0.66_0.11_150)]/10 ring-2 ring-[oklch(0.66_0.11_150)]/20"
+                  ? "border-[oklch(0.68_0.06_150)] bg-[oklch(0.68_0.06_150)]/10 ring-2 ring-[oklch(0.68_0.06_150)]/20"
                   : v === "corrected"
-                    ? "border-amber-400 bg-amber-500/10 ring-2 ring-amber-400/20"
-                    : "border-rose-400 bg-rose-500/10 ring-2 ring-rose-400/20"
+                    ? "border-[oklch(0.78_0.07_72)] bg-[oklch(0.72_0.08_70)]/10 ring-2 ring-[oklch(0.78_0.07_72)]/20"
+                    : "border-[oklch(0.68_0.09_30)] bg-[oklch(0.62_0.09_30)]/10 ring-2 ring-[oklch(0.68_0.09_30)]/20"
                 : "bg-card hover:bg-muted/40"
             }`}
           >
             <span className="flex items-center gap-2 text-lg font-semibold">
-              {v === "confirmed" && <Check className="size-5 text-[oklch(0.78_0.1_150)]" />}
-              {v === "corrected" && <RotateCcw className="size-5 text-amber-300" />}
-              {v === "rejected" && <X className="size-5 text-rose-300" />}
+              {v === "confirmed" && <Check className="size-5 text-[oklch(0.8_0.07_150)]" />}
+              {v === "corrected" && <RotateCcw className="size-5 text-[oklch(0.85_0.07_74)]" />}
+              {v === "rejected" && <X className="size-5 text-[oklch(0.8_0.08_30)]" />}
               {verdictLabel[v]}
             </span>
           </button>
@@ -182,31 +183,17 @@ export function VerifyPanel({
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Your level for {dimensionShort[recommendation.calibration.dimension]} on the floor
           </p>
-          <div
-            role="radiogroup"
-            aria-label="Floor level"
-            className="mt-2 flex gap-2"
-          >
-            {[1, 2, 3, 4, 5].map((level) => (
-              <button
-                key={level}
-                type="button"
-                role="radio"
-                aria-checked={managerLevel === level}
-                onClick={() => setManagerLevel(level)}
-                className={`size-10 rounded-lg border text-sm font-bold transition-colors ${
-                  managerLevel === level
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "bg-card hover:bg-muted"
-                }`}
-              >
-                {level}
-              </button>
-            ))}
+          <div className="mt-2">
+            <BarsLevelPicker
+              dimension={recommendation.calibration.dimension}
+              value={managerLevel}
+              onChange={setManagerLevel}
+              label="Floor level"
+            />
           </div>
           {managerLevel === null && (
             <p className="mt-2 text-xs text-muted-foreground">
-              Pick the level you actually saw before submitting.
+              Pick the description that matches what you saw before submitting.
             </p>
           )}
         </div>
@@ -265,19 +252,19 @@ function VerifyResultPanel({
       <div
         className={`flex items-center gap-3 rounded-xl border p-4 ${
           verdict === "confirmed"
-            ? "border-[oklch(0.66_0.11_150)]/40 bg-[oklch(0.66_0.11_150)]/10"
+            ? "border-[oklch(0.68_0.06_150)]/40 bg-[oklch(0.68_0.06_150)]/10"
             : verdict === "corrected"
-              ? "border-amber-400/40 bg-amber-500/10"
-              : "border-rose-400/40 bg-rose-500/10"
+              ? "border-[oklch(0.78_0.07_72)]/40 bg-[oklch(0.72_0.08_70)]/10"
+              : "border-[oklch(0.68_0.09_30)]/40 bg-[oklch(0.62_0.09_30)]/10"
         }`}
       >
         {verdict === "confirmed" && (
-          <Check className="size-6 text-[oklch(0.78_0.1_150)]" />
+          <Check className="size-6 text-[oklch(0.8_0.07_150)]" />
         )}
         {verdict === "corrected" && (
-          <RotateCcw className="size-6 text-amber-300" />
+          <RotateCcw className="size-6 text-[oklch(0.85_0.07_74)]" />
         )}
-        {verdict === "rejected" && <X className="size-6 text-rose-300" />}
+        {verdict === "rejected" && <X className="size-6 text-[oklch(0.8_0.08_30)]" />}
         <div>
           <p className="font-semibold">
             {verdict === "confirmed"
@@ -296,18 +283,18 @@ function VerifyResultPanel({
       <CalibrationShift data={data} />
 
       {data.escalation && (
-        <div className="rounded-xl border border-rose-400/40 bg-rose-500/10 p-4">
+        <div className="rounded-xl border border-[oklch(0.68_0.09_30)]/40 bg-[oklch(0.62_0.09_30)]/10 p-4">
           <div className="flex items-center gap-2">
-            <ShieldAlert className="size-5 text-rose-300" />
-            <p className="text-sm font-semibold text-rose-200">
+            <ShieldAlert className="size-5 text-[oklch(0.8_0.08_30)]" />
+            <p className="text-sm font-semibold text-[oklch(0.88_0.05_32)]">
               Escalated — {routeLabel[data.escalation.route]} · rule{" "}
               {data.escalation.rule_id}
             </p>
-            <Badge variant="outline" className="ml-auto border-rose-400/40 text-rose-300">
+            <Badge variant="outline" className="ml-auto border-[oklch(0.68_0.09_30)]/40 text-[oklch(0.8_0.08_30)]">
               severity {data.escalation.severity}
             </Badge>
           </div>
-          <p className="mt-2 text-sm text-rose-200/80">
+          <p className="mt-2 text-sm text-[oklch(0.88_0.05_32)]/80">
             {data.escalation.summary}
           </p>
         </div>
@@ -371,7 +358,7 @@ function CalibrationShift({ data }: { data: VerifyResponse }) {
       </p>
       <p
         aria-live="off"
-        className="mt-2 font-mono text-4xl font-bold tabular-nums text-primary"
+        className="mt-2 text-4xl font-bold tabular-nums text-primary"
       >
         {displayPct.toFixed(1)}%
       </p>
@@ -382,7 +369,7 @@ function CalibrationShift({ data }: { data: VerifyResponse }) {
         />
       </div>
       {hasInterval && (
-        <p className="mt-1 font-mono text-[11px] tabular-nums text-muted-foreground">
+        <p className="mt-1 text-[11px] tabular-nums text-muted-foreground">
           95% CI {((shift.lower ?? 0) * 100).toFixed(1)}%–
           {((shift.upper ?? 0) * 100).toFixed(1)}%
         </p>
