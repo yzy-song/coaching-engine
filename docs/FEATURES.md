@@ -4,9 +4,10 @@ The Coaching Engine — frontend feature inventory for team integration
 discussions. Covers every user-facing screen, the API endpoints it calls,
 its mock data source, and open contract items.
 
-> Last updated: 2026-09-07 · synced with commit `b427bcb` (light-first spa
-> editorial polish). Keep this file in step with the code — update it whenever
-> a feature, endpoint, or contract detail changes.
+> Last updated: 2026-09-09 · synced with commit `26cb555` (team-lead feedback
+> round — wizard capture, 4-turn scripts, queue redesign). Keep this file in
+> step with the code — update it whenever a feature, endpoint, or contract
+> detail changes.
 
 ## A. Landing page (demo-only, no backend)
 
@@ -21,10 +22,10 @@ its mock data source, and open contract items.
 | # | Feature | Route | Endpoints |
 |---|---|---|---|
 | 1 | Overview dashboard — pending count, team radar (values hidden), queue list, calibration card | `/manager` | GET `/recommendations`, `/calibration`, `/insights/team`, `/staff/{id}/gap` (per roster member) |
-| 2 | Verify queue — pending recommendations + abstained cards | `/manager/verify` | GET `/recommendations` |
+| 2 | Verify queue — filter chips (All / dimension / Abstained), inline expand with Confirm-Correct-Reject verdict UI, abstained cards dashed | `/manager/verify` | GET `/recommendations`; POST `/recommendations/{id}/verify` |
 | 3 | Verify detail — default view shows name + one sentence + Confirm / Correct / Reject; "Why is the AI saying this?" opens cited evidence; Correct picks a BARS description row | `/manager/verify/{id}` | GET `/recommendations/{id}`; POST `/recommendations/{id}/verify` `{verdict, dimension_verdicts[], reason, seconds_to_decide}` |
 | 4 | Transfer gap — conclusion card, quadrant badges, radar (values hidden), practice-side privacy note | `/manager/gap?staff=` | GET `/staff/{id}/gap`, `/staff/{id}/scores?source=floor` |
-| 5 | Observation tool — moment-type chips preselect dimensions, BARS description picker (no numbers), idempotent write, 409 sequencing gate | `/manager/observe` | GET `/staff/{id}/scores`; POST `/observations` `{staff_id, observed_at, context, what_happened, ratings[]}` |
+| 5 | Observation wizard — one question at a time (who → full/partial → kind of moment → one dimension at a time → note); partial rates only witnessed dimensions; BARS description picker (no numbers); idempotent write, 409 sequencing gate | `/manager/observe` | GET `/staff/{id}/scores`; POST `/observations` `{staff_id, observed_at, context, what_happened, ratings[]}` |
 | 6 | Team insights — k-anonymised patterns (k = 5), suppressed rows visible, calibration card | `/manager/insights` | GET `/insights/team` |
 
 ## C. Staff PWA (Diego)
@@ -33,7 +34,7 @@ its mock data source, and open contract items.
 |---|---|---|---|
 | 7 | Home — debrief entry, last practice (level words only), trust footer | `/staff` | POST `/debriefs`, GET `/debriefs/{id}` |
 | 8 | Practice list — 1 personal replay + 3 starter scenarios | `/staff/practice` | GET `/scenarios` |
-| 9 | Practice chat — scripted guest, mood shifts, voice input with fallback, optimistic send, finish-to-score | `/staff/practice/{id}` | POST `/scenarios/{id}/attempts`; POST `/attempts/{id}/turns`; POST `/attempts/{id}/complete` |
+| 9 | Practice chat — scripted guest (4 turns), mood shifts, voice input with fallback, optimistic send, finish-to-score | `/staff/practice/{id}` | POST `/scenarios/{id}/attempts`; POST `/attempts/{id}/turns`; POST `/attempts/{id}/complete` |
 | 10 | Results — level words (Finding this hard → Leading here), quoted evidence, "What earned this" | `/staff/results/{id}` | GET `/attempts/{id}` |
 | 11 | History — per-run feedback, manager-observation lock icons | `/staff/history` | (seed data) |
 
@@ -96,7 +97,8 @@ template-scored), create debrief.
 
 - Light spa palette (cream/sage/sand/brown), Fraunces headings + Inter body,
   12px caption floor, WCAG contrast, sr-only "not shown" for hidden radar
-  values, two-level disclosure pattern (Details toggles).
+  values, two-level disclosure pattern (Details toggles), "Back to overview"
+  link on every manager tab page.
 
 ## E. Open contract items (frontend ↔ backend)
 
@@ -112,6 +114,7 @@ template-scored), create debrief.
    `overall_feedback`).
 5. **`ObservationInput.source` enum** in the yaml isn't in the frontend type.
 6. **Scenario engine (Nathan's lane)** — guest replies are scripted and
-   don't react to reply quality; 6 turns feels long for a live demo.
+   don't react to reply quality; scripts trimmed to 4 turns for the demo
+   (turn budget now derives from script length).
 7. Minor: overview dashboard does N+1 gap calls over the roster; mock
    doesn't enforce Bearer auth.
