@@ -4,10 +4,9 @@ The Coaching Engine — frontend feature inventory for team integration
 discussions. Covers every user-facing screen, the API endpoints it calls,
 its mock data source, and open contract items.
 
-> Last updated: 2026-09-09 · synced with commit `26cb555` (team-lead feedback
-> round — wizard capture, 4-turn scripts, queue redesign). Keep this file in
-> step with the code — update it whenever a feature, endpoint, or contract
-> detail changes.
+> Last updated: 2026-09-09 · synced with commit `cbbf718` (debrief voice
+> input — shared hook). Keep this file in step with the code — update it
+> whenever a feature, endpoint, or contract detail changes.
 
 ## A. Landing page (demo-only, no backend)
 
@@ -32,7 +31,7 @@ its mock data source, and open contract items.
 
 | # | Feature | Route | Endpoints |
 |---|---|---|---|
-| 7 | Home — debrief entry, last practice (level words only), trust footer | `/staff` | POST `/debriefs`, GET `/debriefs/{id}` |
+| 7 | Home — debrief entry with voice input (mic permission-first, demo fallback), last practice (level words only), trust footer | `/staff` | POST `/debriefs`, GET `/debriefs/{id}` |
 | 8 | Practice list — 1 personal replay + 3 starter scenarios | `/staff/practice` | GET `/scenarios` |
 | 9 | Practice chat — scripted guest (4 turns), mood shifts, voice input with fallback, optimistic send, finish-to-score | `/staff/practice/{id}` | POST `/scenarios/{id}/attempts`; POST `/attempts/{id}/turns`; POST `/attempts/{id}/complete` |
 | 10 | Results — level words (Finding this hard → Leading here), quoted evidence, "What earned this" | `/staff/results/{id}` | GET `/attempts/{id}` |
