@@ -67,10 +67,17 @@ const verdictLabel: Record<Verdict, string> = {
   rejected: "Reject",
 };
 
+/**
+ * onSettled fires after a verdict is recorded. The detail page omits it and
+ * keeps showing the result panel; the inline queue cards pass it to unmount
+ * the row once the verdict lands.
+ */
 export function VerifyPanel({
   recommendation,
+  onSettled,
 }: {
   recommendation: Recommendation;
+  onSettled?: () => void;
 }) {
   const [seconds, setSeconds] = useState(0);
   const [verdict, setVerdict] = useState<Verdict | null>(null);
@@ -128,6 +135,7 @@ export function VerifyPanel({
       if (!res.ok) throw new Error("Verify failed");
       const data = (await res.json()) as VerifyResponse;
       setResponse(data);
+      onSettled?.();
       toast.success(
         data.escalation
           ? `Confirmed — routed to ${routeLabel[data.escalation.route].toLowerCase()}`

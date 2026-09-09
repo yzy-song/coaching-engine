@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Lock, LockOpen, Timer } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BarsLevelPicker } from "@/features/manager-console/components/bars-level-picker";
 import { managerApi } from "@/features/manager-console/api/managerApi";
-import { dimensionShort, observationDimensionLabels } from "@/lib/format";
+import { dimensionShort, observationDimensionLines } from "@/lib/format";
 import type {
   ObservationDimension,
   StaffMember,
@@ -15,20 +15,23 @@ import type {
 } from "@/lib/types";
 
 /**
- * The manager's observe surface, redesigned as a quick capture with a record
- * anchor: one card on top to log a staff member's floor moment (staff chip,
- * kind of moment, dimension, BARS level as a description, optional one-line
- * note), and the tapped staff member's existing floor observations beside it
- * — so the manager sees what is already on the record before their judgement
- * lands.
+ * The manager's observe surface, redesigned as a one-question-at-a-time
+ * wizard with a record anchor: each step asks a single question and slides
+ * away when answered (Who → Full/Partial → kind of moment → one dimension at
+ * a time → optional note), and the tapped staff member's existing floor
+ * observations sit beside it — so the manager sees what is already on the
+ * record before their judgement lands.
  *
- * Picking the kind of moment PRESELECTS the dimension most likely at play
- * (a preset, never a lock — the manager taps any chip to adjust, or moves
- * on straight to the level rows). Submission keeps the observation route
- * contract: exactly ONE rated dimension per capture, an Idempotency-Key on
- * the write (double tap on hotel wifi cannot log twice), and the page's own
- * feedback line instead of a redirect — the manager can keep capturing for
- * the rest of the shift.
+ * Scope decides what gets shown in the dimension steps: "Full" walks all
+ * five BARS dimensions (the moment type's suggested ones first), "Partial"
+ * walks only the dimensions that kind of moment usually shows. Anything the
+ * manager did not witness — skipped or never asked — stays unrated and is
+ * never scored: the ratings array carries ONLY the rated dimensions.
+ *
+ * Submission keeps the observation route contract: an Idempotency-Key on the
+ * write (double tap on hotel wifi cannot log twice), the 409 sequencing gate,
+ * and the page's own feedback line instead of a redirect — the manager can
+ * keep capturing for the rest of the shift.
  */
 
 const CAPTURE_DIMENSIONS: ObservationDimension[] = [
@@ -40,8 +43,9 @@ const CAPTURE_DIMENSIONS: ObservationDimension[] = [
 ];
 
 /** Kinds of floor moment offered in the capture; each suggests the BARS
- * dimensions that moment usually scores on. First suggestion is preselected
- * into the dimension chip below, never locked. */
+ * dimensions that moment usually scores on. The suggestion orders the
+ * dimension steps (first for "Full") and, for "Partial", is the entire list
+ * that gets asked at all. */
 type MomentKind = "guest_question" | "complaint" | "proactive" | "routine";
 
 const MOMENT_TYPES: ReadonlyArray<{
@@ -71,6 +75,13 @@ const MOMENT_TYPES: ReadonlyArray<{
   },
 ];
 
+/** "Partial" captures rate only the moment type's suggested dimensions. */
+type ScopeKind = "full" | "partial";
+
+/** Wizard position — one question at a time, forward on answer, back via
+ * the Back / Change affordances. */
+type StepId = "who" | "scope" | "kind" | "dimensions" | "note";
+
 const FLOOR_DOT = "text-[oklch(0.45_0.08_30)]";
 const FLOOR_PILL =
   "bg-[oklch(0.66_0.09_30)]/12 text-[oklch(0.45_0.08_30)] border-[oklch(0.66_0.09_30)]/30";
@@ -80,24 +91,33 @@ type RecordState =
   | { kind: "error" }
   | { kind: "ready"; rows: StaffScoreRow[] };
 
-const CHIP_SELECTED =
-  "border-primary bg-primary text-primary-foreground";
+const CHIP_SELECTED = "border-primary bg-primary text-primary-foreground";
 const CHIP_IDLE = "border bg-card text-foreground hover:bg-muted/40";
+
+const QUESTION_LABEL = "text-xs font-medium text-muted-foreground";
+
+/** Delay between a BARS row tap and the next dimension sliding in — long
+ * enough for the tapped row to register, short enough to stay quick. */
+const ADVANCE_MS = 220;
+
+type RatingsState = Partial<Record<ObservationDimension, number>>;
 
 export function ObservationForm({ staff }: { staff: StaffMember[] }) {
   const [staffId, setStaffId] = useState(staff[0]?.id ?? "");
+  const [step, setStep] = useState<StepId>("who");
+  const [scope, setScope] = useState<ScopeKind | null>(null);
   const [moment, setMoment] = useState<MomentKind | null>(null);
-  const [dimension, setDimension] = useState<ObservationDimension | null>(null);
-  const [level, setLevel] = useState<number | null>(null);
+  const [dimIndex, setDimIndex] = useState(0);
+  const [ratings, setRatings] = useState<RatingsState>({});
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [loggedName, setLoggedName] = useState<string | null>(null);
   const [anchorVersion, setAnchorVersion] = useState(0);
   const [record, setRecord] = useState<RecordState>({ kind: "loading" });
+  const advanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const member = staff.find((s) => s.id === staffId) ?? staff[0];
   const selectedName = member?.name ?? "";
-  const momentMeta = MOMENT_TYPES.find((m) => m.id === moment) ?? null;
 
   // The record anchors follow the tapped chip and refresh after each submit.
   useEffect(() => {
@@ -108,7 +128,7 @@ export function ObservationForm({ staff }: { staff: StaffMember[] }) {
       .then((res) => {
         if (cancelled) return;
         const rows = [...res.scores].sort((a, b) =>
-          b.recorded_at.localeCompare(a.recorded_at)
+          b.recorded_at.localeCompare(a.recorded_at),
         );
         setRecord({ kind: "ready", rows });
       })
@@ -120,42 +140,174 @@ export function ObservationForm({ staff }: { staff: StaffMember[] }) {
     };
   }, [staffId, anchorVersion]);
 
-  const beginCapture = () => {
-    if (loggedName !== null) setLoggedName(null);
+  useEffect(
+    () => () => {
+      if (advanceTimer.current !== null) {
+        clearTimeout(advanceTimer.current);
+      }
+    },
+    [],
+  );
+
+  const clearAdvanceTimer = () => {
+    if (advanceTimer.current !== null) {
+      clearTimeout(advanceTimer.current);
+      advanceTimer.current = null;
+    }
   };
 
-  /** Select a dimension; a level already picked on another dimension would
-   * silently name the wrong description row, so it clears on change. */
-  const pickDimension = (next: ObservationDimension) => {
-    if (next !== dimension) setLevel(null);
-    setDimension(next);
-    beginCapture();
+  /** The dimension order for a scope + moment type: the moment type's
+   * suggested dimensions first, then (for a full capture) the rest. */
+  const dimensionOrder = (
+    nextScope: ScopeKind | null,
+    nextMoment: MomentKind | null,
+  ): ObservationDimension[] => {
+    const kind = MOMENT_TYPES.find((m) => m.id === nextMoment);
+    if (nextScope === null || kind === undefined) return [];
+    const suggested = kind.suggest.filter((d): d is ObservationDimension =>
+      CAPTURE_DIMENSIONS.includes(d),
+    );
+    if (nextScope === "partial") return [...suggested];
+    return [
+      ...suggested,
+      ...CAPTURE_DIMENSIONS.filter((d) => !suggested.includes(d)),
+    ];
   };
 
-  /** Preselect the moment's first suggested dimension — adjustable, not a
-   * lock: the dimension chips and a fresh level pick still rule. */
+  const queue = useMemo(() => dimensionOrder(scope, moment), [scope, moment]);
+
+  const clearCapture = () => {
+    setScope(null);
+    setMoment(null);
+    setDimIndex(0);
+    setRatings({});
+    setNote("");
+  };
+
+  /** After Who/scope/moment is answered, land on the first dimension that
+   * has no rating yet — or on the note step once every dimension is done. */
+  const enterDimensions = (
+    nextScope: ScopeKind | null,
+    nextMoment: MomentKind | null,
+  ) => {
+    const nextQueue = dimensionOrder(nextScope, nextMoment);
+    if (nextQueue.length === 0) {
+      setStep("scope");
+      return;
+    }
+    const firstUnrated = nextQueue.findIndex((d) => ratings[d] === undefined);
+    if (firstUnrated === -1) {
+      setDimIndex(nextQueue.length - 1);
+      setStep("note");
+    } else {
+      setDimIndex(firstUnrated);
+      setStep("dimensions");
+    }
+  };
+
+  /** Step 1 — Who. A new staff member restarts the capture; re-tapping the
+   * current member resumes it at the first question still open. */
+  const pickStaff = (id: string) => {
+    clearAdvanceTimer();
+    setLoggedName(null);
+    if (id !== staffId) {
+      setStaffId(id);
+      clearCapture();
+      setStep("scope");
+    } else if (scope === null) {
+      setStep("scope");
+    } else if (moment === null) {
+      setStep("kind");
+    } else {
+      enterDimensions(scope, moment);
+    }
+  };
+
+  const pickScope = (next: ScopeKind) => {
+    clearAdvanceTimer();
+    setLoggedName(null);
+    if (scope !== next) {
+      setScope(next);
+      setDimIndex(0);
+      setRatings({});
+    }
+    if (moment === null) {
+      setStep("kind");
+    } else {
+      enterDimensions(next, moment);
+    }
+  };
+
   const pickMoment = (next: MomentKind) => {
-    const kind = MOMENT_TYPES.find((m) => m.id === next);
-    if (!kind) return;
-    setMoment(next);
-    if (kind.suggest[0] !== dimension) setLevel(null);
-    setDimension(kind.suggest[0]);
-    beginCapture();
+    clearAdvanceTimer();
+    setLoggedName(null);
+    if (moment !== next) {
+      setMoment(next);
+      setDimIndex(0);
+      setRatings({});
+    }
+    enterDimensions(scope, next);
   };
 
-  const pickLevel = (next: number) => {
-    setLevel(next);
-    beginCapture();
+  /** One row tap rates the current dimension AND slides to the next one. */
+  const rateDimension = (dimension: ObservationDimension, level: number) => {
+    clearAdvanceTimer();
+    setLoggedName(null);
+    setRatings((prev) => ({ ...prev, [dimension]: level }));
+    advanceTimer.current = setTimeout(() => {
+      advanceTimer.current = null;
+      if (dimIndex + 1 < queue.length) {
+        setDimIndex((i) => i + 1);
+      } else {
+        setDimIndex(queue.length - 1);
+        setStep("note");
+      }
+    }, ADVANCE_MS);
   };
+
+  const skipDimension = () => {
+    clearAdvanceTimer();
+    setLoggedName(null);
+    const current = queue[dimIndex];
+    if (current !== undefined && ratings[current] !== undefined) {
+      const rest = { ...ratings };
+      delete rest[current];
+      setRatings(rest);
+    }
+    if (dimIndex + 1 < queue.length) {
+      setDimIndex((i) => i + 1);
+    } else {
+      setStep("note");
+    }
+  };
+
+  /** Back walks to the previous question — or the previous dimension when
+   * mid-way through the rating steps (pre-filled, so one tap re-confirms). */
+  const backStep = () => {
+    clearAdvanceTimer();
+    if (step === "dimensions") {
+      if (dimIndex > 0) {
+        setDimIndex((i) => i - 1);
+      } else {
+        setStep("kind");
+      }
+    } else if (step === "note") {
+      setStep("dimensions");
+    } else if (step === "kind") {
+      setStep("scope");
+    } else if (step === "scope") {
+      setStep("who");
+    }
+  };
+
+  const ratedCount = queue.filter((d) => ratings[d] !== undefined).length;
 
   const handleSubmit = async () => {
     if (submitting) return;
-    if (!dimension || level === null) {
-      toast.warning(
-        "Choose the dimension, then tap the level you saw — the note is optional."
-      );
-      return;
-    }
+    if (ratedCount === 0) return;
+    const payload = queue
+      .filter((d) => ratings[d] !== undefined)
+      .map((d) => ({ dimension: d, level: ratings[d] as number }));
     setSubmitting(true);
     try {
       const res = await fetch("/api/v1/observations", {
@@ -169,22 +321,23 @@ export function ObservationForm({ staff }: { staff: StaffMember[] }) {
           observed_at: new Date().toISOString(),
           context: "Quick floor capture",
           what_happened: note.trim(),
-          ratings: [{ dimension, level }],
+          ratings: payload,
         }),
       });
       if (!res.ok) throw new Error("Failed to log observation");
       await res.json();
       setLoggedName(selectedName);
-      setMoment(null);
-      setDimension(null);
-      setLevel(null);
-      setNote("");
+      clearCapture();
+      setSubmitting(false);
+      setStep("scope");
       setAnchorVersion((v) => v + 1);
     } catch {
       toast.error("Could not log the observation. Please retry.");
       setSubmitting(false);
     }
   };
+
+  const currentDimension = queue[dimIndex];
 
   return (
     <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
@@ -205,146 +358,219 @@ export function ObservationForm({ staff }: { staff: StaffMember[] }) {
         </div>
 
         <div className="mt-5 space-y-5 border-t pt-5">
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground">
-              Who did you observe?
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {staff.map((s) => {
-                const selected = s.id === staffId;
-                return (
-                  <button
-                    key={s.id}
+          {step !== "who" && (
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+              <p className={QUESTION_LABEL}>Observing</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-2 rounded-lg border border-primary bg-primary px-3 py-1.5 text-primary-foreground">
+                  <span className="block text-sm font-semibold leading-tight">
+                    {member?.name ?? selectedName}
+                  </span>
+                  {member && (
+                    <span className="block text-xs leading-tight text-primary-foreground/85">
+                      {member.role}
+                    </span>
+                  )}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    clearAdvanceTimer();
+                    setStep("who");
+                  }}
+                >
+                  Change
+                </Button>
+              </div>
+            </div>
+          )}
+
+          <div key={`${step}:${dimIndex}`} className="msg-in space-y-5">
+            {step === "who" && (
+              <div className="space-y-2">
+                <p className={QUESTION_LABEL}>Who did you observe?</p>
+                <div className="flex flex-wrap gap-2">
+                  {staff.map((s) => {
+                    const selected = s.id === staffId;
+                    return (
+                      <button
+                        key={s.id}
+                        type="button"
+                        aria-pressed={selected}
+                        onClick={() => pickStaff(s.id)}
+                        className={`rounded-lg border px-3 py-1.5 text-left transition-colors ${
+                          selected ? CHIP_SELECTED : CHIP_IDLE
+                        }`}
+                      >
+                        <span className="block text-sm font-semibold leading-tight">
+                          {s.name}
+                        </span>
+                        <span
+                          className={`block text-xs leading-tight ${
+                            selected
+                              ? "text-primary-foreground/85"
+                              : "text-muted-foreground"
+                          }`}
+                        >
+                          {s.role} · {s.department}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {step === "scope" && (
+              <div className="space-y-2">
+                <p className={QUESTION_LABEL}>Did you see the whole thing?</p>
+                <div className="grid gap-2.5 sm:grid-cols-2">
+                  <ScopeButton
+                    selected={scope === "full"}
+                    onClick={() => pickScope("full")}
+                    title="Full"
+                    body="I saw the whole moment"
+                  />
+                  <ScopeButton
+                    selected={scope === "partial"}
+                    onClick={() => pickScope("partial")}
+                    title="Partial"
+                    body="I only saw part of it"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Partial rates only the dimensions this kind of moment usually
+                  suggests — anything you did not witness stays unrated and is
+                  never scored.
+                </p>
+              </div>
+            )}
+
+            {step === "kind" && (
+              <div className="space-y-2">
+                <p className={QUESTION_LABEL}>What kind of moment was it?</p>
+                <div className="flex flex-wrap gap-2">
+                  {MOMENT_TYPES.map((m) => {
+                    const selected = moment === m.id;
+                    return (
+                      <button
+                        key={m.id}
+                        type="button"
+                        aria-pressed={selected}
+                        onClick={() => pickMoment(m.id)}
+                        className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
+                          selected ? CHIP_SELECTED : CHIP_IDLE
+                        }`}
+                      >
+                        {m.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Suggested dimensions are rated first — and are the only ones
+                  asked when the sighting was partial.
+                </p>
+                <p className="flex justify-end">
+                  <Button
                     type="button"
-                    aria-pressed={selected}
-                    onClick={() => {
-                      setStaffId(s.id);
-                      beginCapture();
+                    variant="ghost"
+                    size="sm"
+                    onClick={backStep}
+                  >
+                    Back
+                  </Button>
+                </p>
+              </div>
+            )}
+
+            {step === "dimensions" && currentDimension !== undefined && (
+              <div className="space-y-3">
+                <p className={QUESTION_LABEL}>
+                  Dimension {dimIndex + 1} of {queue.length}
+                </p>
+                <div className="space-y-1">
+                  <p className="text-lg font-semibold tracking-tight">
+                    {observationDimensionLines[currentDimension].name}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {observationDimensionLines[currentDimension].line}
+                  </p>
+                </div>
+                <BarsLevelPicker
+                  dimension={currentDimension}
+                  value={ratings[currentDimension] ?? null}
+                  onChange={(level) => rateDimension(currentDimension, level)}
+                  label={observationDimensionLines[currentDimension].name}
+                />
+                <div className="flex items-center justify-between gap-2 pt-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={backStep}
+                  >
+                    Back
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={skipDimension}
+                  >
+                    Skip — doesn&apos;t apply
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {step === "note" && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <p className={QUESTION_LABEL}>Note (optional)</p>
+                  <Input
+                    placeholder="One line on what you saw"
+                    value={note}
+                    onChange={(e) => {
+                      setNote(e.target.value);
+                      setLoggedName(null);
                     }}
-                    className={`rounded-lg border px-3 py-1.5 text-left transition-colors ${
-                      selected ? CHIP_SELECTED : CHIP_IDLE
-                    }`}
-                  >
-                    <span className="block text-sm font-semibold leading-tight">
-                      {s.name}
-                    </span>
-                    <span
-                      className={`block text-xs leading-tight ${
-                        selected
-                          ? "text-primary-foreground/85"
-                          : "text-muted-foreground"
-                      }`}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex flex-wrap items-center justify-center gap-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={backStep}
                     >
-                      {s.role} · {s.department}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground">
-              What kind of moment was it?
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {MOMENT_TYPES.map((m) => {
-                const selected = moment === m.id;
-                return (
-                  <button
-                    key={m.id}
-                    type="button"
-                    aria-pressed={selected}
-                    onClick={() => pickMoment(m.id)}
-                    className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
-                      selected ? CHIP_SELECTED : CHIP_IDLE
-                    }`}
-                  >
-                    {m.label}
-                  </button>
-                );
-              })}
-            </div>
-            {momentMeta !== null && (
-              <p className="text-xs text-muted-foreground">
-                Preselects{" "}
-                {momentMeta.suggest
-                  .map((d) => observationDimensionLabels[d])
-                  .join(" or ")}{" "}
-                — adjust in the next step.
-              </p>
+                      Back
+                    </Button>
+                    <Button
+                      type="button"
+                      size="lg"
+                      className="w-full sm:w-auto sm:min-w-64"
+                      disabled={submitting || ratedCount === 0}
+                      onClick={handleSubmit}
+                    >
+                      {submitting ? "Logging…" : "Log observation"}
+                    </Button>
+                  </div>
+                  {ratedCount === 0 && (
+                    <p className="text-center text-xs text-muted-foreground">
+                      Rate at least one dimension — anything unrated is never
+                      scored.
+                    </p>
+                  )}
+                </div>
+              </div>
             )}
           </div>
 
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground">
-              Which dimension?
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {CAPTURE_DIMENSIONS.map((d) => {
-                const selected = dimension === d;
-                return (
-                  <button
-                    key={d}
-                    type="button"
-                    aria-pressed={selected}
-                    onClick={() => pickDimension(d)}
-                    className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
-                      selected ? CHIP_SELECTED : CHIP_IDLE
-                    }`}
-                  >
-                    {observationDimensionLabels[d]}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground">
-              Level — how well they handled it
-            </p>
-            {dimension === null ? (
-              <p className="rounded-lg border border-dashed p-3 text-xs text-muted-foreground">
-                Pick the moment type or a dimension above to see the level
-                descriptions.
-              </p>
-            ) : (
-              <BarsLevelPicker
-                dimension={dimension}
-                value={level}
-                onChange={pickLevel}
-                label="Level"
-              />
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <p className="text-xs font-medium text-muted-foreground">
-              Note (optional)
-            </p>
-            <Input
-              placeholder="One line on what you saw"
-              value={note}
-              onChange={(e) => {
-                setNote(e.target.value);
-                beginCapture();
-              }}
-            />
-          </div>
-
-          <div className="space-y-3 pt-1">
-            <div className="flex justify-center">
-              <Button
-                type="button"
-                size="lg"
-                className="w-full sm:w-auto sm:min-w-64"
-                disabled={submitting}
-                onClick={handleSubmit}
-              >
-                {submitting ? "Logging…" : "Log observation"}
-              </Button>
-            </div>
+          <div className="pt-1">
             {loggedName !== null ? (
               <div
                 role="status"
@@ -369,6 +595,41 @@ export function ObservationForm({ staff }: { staff: StaffMember[] }) {
 
       <RecordAnchors name={selectedName} record={record} />
     </div>
+  );
+}
+
+/** One half of the Full / Partial choice — a big tappable panel, not a chip. */
+function ScopeButton({
+  selected,
+  onClick,
+  title,
+  body,
+}: {
+  selected: boolean;
+  onClick: () => void;
+  title: string;
+  body: string;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={selected}
+      onClick={onClick}
+      className={`flex flex-col gap-0.5 rounded-xl border px-4 py-3 text-left transition-colors ${
+        selected ? CHIP_SELECTED : CHIP_IDLE
+      }`}
+    >
+      <span className="text-sm font-semibold leading-tight">
+        {title} — {body}
+      </span>
+      {selected && (
+        <span className="text-xs text-primary-foreground/85">
+          {title === "Full"
+            ? "Every dimension gets rated."
+            : "Only the dimensions this kind of moment usually shows."}
+        </span>
+      )}
+    </button>
   );
 }
 
@@ -413,8 +674,7 @@ function RecordAnchors({
 
       {record.kind === "ready" && record.rows.length === 0 && (
         <p className="mt-3 rounded-lg border border-dashed p-3 text-xs text-muted-foreground">
-          Nothing on the record for {name} yet — your first capture lands
-          here.
+          Nothing on the record for {name} yet — your first capture lands here.
         </p>
       )}
 

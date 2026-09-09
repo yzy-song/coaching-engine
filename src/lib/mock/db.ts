@@ -1445,7 +1445,7 @@ export const mockDb = {
         {
           turn_index: 0,
           guest: { content: opener.content, mood: opener.mood },
-          turns_remaining: 6,
+          turns_remaining: script?.replies.length ?? 4,
           can_complete: false,
         },
       ],
@@ -1462,9 +1462,10 @@ export const mockDb = {
     const attempt = store.attempts.get(attemptId);
     if (!attempt) throw new Error("Attempt not found");
     const turnIndex = attempt.turns.length;
-    const turnsRemaining = 6 - turnIndex;
-
     const script = guestScriptFor(attempt.scenario_id);
+    const totalTurns = script?.replies.length ?? 4;
+    const turnsRemaining = totalTurns - (turnIndex - 1);
+
     const staffTurnIndex = Math.max(0, turnIndex - 1); // opener is turn 0
     const guestLine =
       script && script.replies.length > 0

@@ -166,16 +166,6 @@ export const guestScripts: Record<string, GuestScript> = {
           "And if the room isn't ready soon we've lost the evening — that has to count for something, surely?",
         mood: "frustrated",
       },
-      {
-        content:
-          "Alright. If you stay with this and come back to me — instead of making me chase — that helps.",
-        mood: "calming",
-      },
-      {
-        content:
-          "Thank you. It shouldn't have taken all this, but you've made it right.",
-        mood: "calming",
-      },
     ],
   },
   "s1-starter": {
@@ -204,16 +194,6 @@ export const guestScripts: Record<string, GuestScript> = {
         content:
           "Fine — but I want to know when, and I don't want to be told 'soon' a third time tonight.",
         mood: "frustrated",
-      },
-      {
-        content:
-          "Okay. If you keep me informed and I'm not the one chasing, that's fair.",
-        mood: "calming",
-      },
-      {
-        content:
-          "Thank you. That's how it should have been from the start.",
-        mood: "calming",
       },
     ],
   },
@@ -244,16 +224,6 @@ export const guestScripts: Record<string, GuestScript> = {
           "Alright — but if it starts again I'm calling back, and I expect it handled properly this time.",
         mood: "frustrated",
       },
-      {
-        content:
-          "Thank you. I appreciate you handling it quietly instead of making a scene.",
-        mood: "calming",
-      },
-      {
-        content:
-          "It's quiet now. Thank you for sorting it — I'll sleep after all.",
-        mood: "calming",
-      },
     ],
   },
   "s3-starter": {
@@ -282,16 +252,6 @@ export const guestScripts: Record<string, GuestScript> = {
         content:
           "How long for the correct order? And the coffee you offered had better come off the bill.",
         mood: "frustrated",
-      },
-      {
-        content:
-          "Well — at least you're telling us the truth now, instead of disappearing.",
-        mood: "calming",
-      },
-      {
-        content:
-          "The salmon was lovely once it came. Thank you — you saved the evening in the end.",
-        mood: "calming",
       },
     ],
   },
@@ -462,7 +422,7 @@ export const inProgressAttempt: PracticeAttempt = {
           "We've been travelling since six this morning. You said the room would be ready at three — it's half past now and you're telling me it isn't. What am I supposed to do?",
         mood: "frustrated",
       },
-      turns_remaining: 6,
+      turns_remaining: 4,
       can_complete: false,
     },
   ],

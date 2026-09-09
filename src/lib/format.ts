@@ -13,8 +13,37 @@ export const dimensionLabels: Record<BarsDimension, string> = {
   service_recovery: "Service Recovery",
 };
 
-export const observationDimensionLabels: Record<ObservationDimension, string> = {
-  ...dimensionLabels,
+export const observationDimensionLabels: Record<ObservationDimension, string> =
+  {
+    ...dimensionLabels,
+  };
+
+/** Display name plus the plain-English line the manager rates against, one
+ * dimension at a time (observation wizard). Keyed by the canonical BARS key. */
+export const observationDimensionLines: Record<
+  BarsDimension,
+  { name: string; line: string }
+> = {
+  service_recovery: {
+    name: "Service Recovery",
+    line: "Did they fix the problem for the guest?",
+  },
+  empathy: {
+    name: "Empathy & Active Listening",
+    line: "Did they acknowledge how the guest felt?",
+  },
+  communication: {
+    name: "Guest Communication",
+    line: "Did they explain things clearly and warmly?",
+  },
+  composure: {
+    name: "Composure & Professionalism",
+    line: "Did they stay calm and in control?",
+  },
+  anticipation: {
+    name: "Guest Anticipation",
+    line: "Did they spot what the guest needed before being asked?",
+  },
 };
 
 export const dimensionShort: Record<BarsDimension, string> = {
@@ -38,9 +67,7 @@ export const levelLabels: Record<number, string> = {
 /** The qualitative word for a scored level, or null when the dimension was
  * not scored. */
 export function levelWord(level: number | null): string | null {
-  return level === null || level < 1 || level > 5
-    ? null
-    : levelLabels[level];
+  return level === null || level < 1 || level > 5 ? null : levelLabels[level];
 }
 
 export interface QuadrantMeta {
