@@ -35,6 +35,11 @@ Two apps, one loop:
 - Team insights are k-anonymised; individual coaching is suppressed when the
   root cause is process or policy.
 
+## Docs
+
+- [Frontend feature list](docs/FEATURES.md) — every screen, its endpoints,
+  mock sources, and open contract items with the backend.
+
 ## Related work
 
 [Cornell's AI-powered hospitality training](https://innovationhub.ai.cornell.edu/articles/training-the-next-generation-of-hotel-staff-an-ai-powered-approach-to-hospitality-education/)
