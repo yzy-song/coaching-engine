@@ -7,12 +7,24 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { staffApi } from "@/features/staff-pwa/api/staffApi";
+import { useVoiceInput } from "@/features/staff-pwa/lib/use-voice-input";
 import type { Debrief } from "@/lib/types";
+
+const DEMO_VOICE_LINE =
+  "A guest asked for a late checkout and I wasn't sure if I could say yes, so I checked the duty manager's guidance.";
 
 export function DebriefEntry() {
   const [text, setText] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<Debrief | null>(null);
+
+  const { listening, toggleVoice, stop } = useVoiceInput({
+    demoLine: DEMO_VOICE_LINE,
+    onTranscript: setText,
+    getBaseInput: () => text,
+    enabled: !submitting,
+    demoNoun: "debrief",
+  });
 
   const handleSubmit = async () => {
     if (submitting) return;
@@ -20,6 +32,7 @@ export function DebriefEntry() {
       toast.warning("Tell us what happened first — a sentence is enough.");
       return;
     }
+    stop();
     setSubmitting(true);
     try {
       // POST registers the debrief (202) and the follow-up read returns the
@@ -112,7 +125,12 @@ export function DebriefEntry() {
         <Textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="A guest asked for something you weren't sure you could offer — or a moment that still feels off, in your own words…"
+          disabled={submitting || listening}
+          placeholder={
+            listening
+              ? "Listening — speak your debrief…"
+              : "A guest asked for something you weren't sure you could offer — or a moment that still feels off, in your own words…"
+          }
           className="mt-3 min-h-28"
         />
         <div className="mt-3 flex items-center gap-2">
@@ -124,18 +142,34 @@ export function DebriefEntry() {
             {submitting ? "Checking against your standard…" : "Get instant feedback"}
           </Button>
           <Button
+            type="button"
             variant="outline"
             size="icon"
-            className="size-10 shrink-0"
-            disabled
-            title="Voice debrief coming soon"
+            onClick={toggleVoice}
+            disabled={submitting}
+            aria-label={listening ? "Stop voice input" : "Start voice input"}
+            aria-pressed={listening}
+            title="Voice input"
+            className={`size-10 shrink-0 rounded-lg ${
+              listening
+                ? "border-[oklch(0.62_0.09_28)]/50 bg-[oklch(0.7_0.085_28)]/10 text-[oklch(0.44_0.09_28)]"
+                : ""
+            }`}
           >
-            <Mic className="size-4" />
+            <Mic className={`size-4 ${listening ? "animate-pulse" : ""}`} />
           </Button>
         </div>
+        {listening && (
+          <p
+            aria-live="polite"
+            className="mt-2 text-center text-xs text-[oklch(0.44_0.09_28)]"
+          >
+            Listening… your words fill the box — review, then submit.
+          </p>
+        )}
         <p className="mt-2 text-center text-xs text-muted-foreground">
-          Voice debrief coming soon — audio is deleted once the transcript is
-          confirmed.
+          Voice is optional — audio stays on your device and is deleted once
+          the transcript is confirmed.
         </p>
       </div>
     </div>

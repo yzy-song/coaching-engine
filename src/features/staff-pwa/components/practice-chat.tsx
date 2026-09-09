@@ -3,8 +3,8 @@
 import { Fragment, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Mic, Send } from "lucide-react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { useVoiceInput } from "@/features/staff-pwa/lib/use-voice-input";
 import type { PracticeAttempt } from "@/lib/types";
 
 interface Message {
@@ -51,30 +51,6 @@ function shiftNote(from: string, to: string): string | null {
 const DEMO_VOICE_LINE =
   "I'm really sorry about the wait — let me fix this for you right away.";
 
-interface SpeechRecognitionLike {
-  lang: string;
-  continuous: boolean;
-  interimResults: boolean;
-  onresult:
-    | ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void)
-    | null;
-  onend: (() => void) | null;
-  onerror: ((e: { error: string }) => void) | null;
-  start: () => void;
-  stop: () => void;
-  abort: () => void;
-}
-
-function getSpeechRecognition(): SpeechRecognitionLike | null {
-  if (typeof window === "undefined") return null;
-  const w = window as unknown as {
-    SpeechRecognition?: new () => SpeechRecognitionLike;
-    webkitSpeechRecognition?: new () => SpeechRecognitionLike;
-  };
-  const Ctor = w.SpeechRecognition ?? w.webkitSpeechRecognition;
-  return Ctor ? new Ctor() : null;
-}
-
 export function PracticeChat({
   attempt,
   scenarioTitle,
@@ -107,10 +83,14 @@ export function PracticeChat({
   const [canComplete, setCanComplete] = useState(
     latestTurn?.can_complete ?? false
   );
-  const [listening, setListening] = useState(false);
-  const recRef = useRef<SpeechRecognitionLike | null>(null);
-  const micStreamRef = useRef<MediaStream | null>(null);
-  const baseInputRef = useRef("");
+  const exhausted = remaining <= 0;
+
+  const { listening, toggleVoice, stop } = useVoiceInput({
+    demoLine: DEMO_VOICE_LINE,
+    onTranscript: setInput,
+    getBaseInput: () => input,
+    enabled: !exhausted && !completing,
+  });
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -122,91 +102,9 @@ export function PracticeChat({
     }
   }, [messages, sending]);
 
-  useEffect(() => {
-    return () => {
-      recRef.current?.abort();
-      micStreamRef.current?.getTracks().forEach((t) => t.stop());
-    };
-  }, []);
-
-  const stopVoice = () => {
-    const rec = recRef.current;
-    recRef.current = null;
-    setListening(false);
-    micStreamRef.current?.getTracks().forEach((t) => t.stop());
-    micStreamRef.current = null;
-    rec?.abort();
-  };
-
-  const fillDemo = (message: string) => {
-    setInput((v) => (v.trim() ? `${v} ` : "") + DEMO_VOICE_LINE);
-    toast.info(message);
-  };
-
-  const handleMic = async () => {
-    if (listening) {
-      stopVoice();
-      return;
-    }
-    if (exhausted || completing) return;
-    const rec = getSpeechRecognition();
-    if (!rec) {
-      fillDemo(
-        "Voice input isn't available in this browser — filled a demo reply instead."
-      );
-      return;
-    }
-    // Ask for mic permission first: starting recognition before the grant
-    // fires a spurious "not-allowed" error in Chrome on first use.
-    try {
-      micStreamRef.current = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-      });
-    } catch {
-      fillDemo("Microphone access was denied — filled a demo reply instead.");
-      return;
-    }
-    baseInputRef.current = input;
-    rec.lang = "en-US";
-    rec.continuous = false;
-    rec.interimResults = true;
-    rec.onresult = (e) => {
-      let text = "";
-      for (let i = 0; i < e.results.length; i++) {
-        const chunk = e.results[i][0]?.transcript ?? "";
-        if (chunk) text += (text ? " " : "") + chunk;
-      }
-      const base = baseInputRef.current.trim();
-      setInput((base ? `${base} ` : "") + text.trim());
-    };
-    rec.onend = () => {
-      recRef.current = null;
-      setListening(false);
-      micStreamRef.current?.getTracks().forEach((t) => t.stop());
-      micStreamRef.current = null;
-    };
-    rec.onerror = (e) => {
-      if (recRef.current !== rec) return;
-      recRef.current = null;
-      setListening(false);
-      micStreamRef.current?.getTracks().forEach((t) => t.stop());
-      micStreamRef.current = null;
-      if (e.error === "network" || e.error === "service-not-allowed") {
-        fillDemo(
-          `Voice recognition failed (${e.error}) — filled a demo reply instead.`
-        );
-      } else {
-        toast.error("Didn't catch that — please try again or type.");
-      }
-    };
-    recRef.current = rec;
-    setListening(true);
-    rec.start();
-  };
-
   const handleSend = async () => {
     if (sendingRef.current || !input.trim()) return;
-    stopVoice();
+    stop();
     const content = input.trim();
     sendingRef.current = true;
     setSendFailed(false);
@@ -284,7 +182,6 @@ export function PracticeChat({
   });
 
   const usedTurns = TOTAL_TURNS - remaining;
-  const exhausted = remaining <= 0;
   const canFinish =
     canComplete || messages.some((m) => m.role === "staff");
 
@@ -369,7 +266,7 @@ export function PracticeChat({
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            disabled={exhausted || completing}
+            disabled={exhausted || completing || listening}
             placeholder={
               listening
                 ? "Listening — speak your reply…"
@@ -383,9 +280,11 @@ export function PracticeChat({
             type="button"
             variant="outline"
             size="icon"
-            onClick={handleMic}
+            onClick={toggleVoice}
             disabled={exhausted || completing || sending}
             aria-label={listening ? "Stop voice input" : "Start voice input"}
+            aria-pressed={listening}
+            title="Voice input"
             className={`size-11 shrink-0 rounded-lg ${
               listening
                 ? "border-[oklch(0.62_0.09_28)]/50 bg-[oklch(0.7_0.085_28)]/10 text-[oklch(0.44_0.09_28)]"
