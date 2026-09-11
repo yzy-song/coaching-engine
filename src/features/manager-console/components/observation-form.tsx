@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BarsLevelPicker } from "@/features/manager-console/components/bars-level-picker";
+import { StaffPicker } from "@/features/manager-console/components/staff-picker";
 import { managerApi } from "@/features/manager-console/api/managerApi";
 import { dimensionShort, observationDimensionLines } from "@/lib/format";
 import type {
@@ -365,9 +366,9 @@ export function ObservationForm({
                   <span className="block text-sm font-semibold leading-tight">
                     {member?.name ?? selectedName}
                   </span>
-                  {member && (
+                  {member && member.role && member.role !== "staff" && (
                     <span className="block text-xs leading-tight text-primary-foreground/85">
-                      {member.role ?? "Frontline"}
+                      {member.role}
                     </span>
                   )}
                 </span>
@@ -390,35 +391,11 @@ export function ObservationForm({
             {step === "who" && (
               <div className="space-y-2">
                 <p className={QUESTION_LABEL}>Who did you observe?</p>
-                <div className="flex flex-wrap gap-2">
-                  {staff.map((s) => {
-                    const selected = s.id === staffId;
-                    return (
-                      <button
-                        key={s.id}
-                        type="button"
-                        aria-pressed={selected}
-                        onClick={() => pickStaff(s.id)}
-                        className={`rounded-lg border px-3 py-1.5 text-left transition-colors ${
-                          selected ? CHIP_SELECTED : CHIP_IDLE
-                        }`}
-                      >
-                        <span className="block text-sm font-semibold leading-tight">
-                          {s.name}
-                        </span>
-                        <span
-                          className={`block text-xs leading-tight ${
-                            selected
-                              ? "text-primary-foreground/85"
-                              : "text-muted-foreground"
-                          }`}
-                        >
-                          {s.role ?? "Frontline"} · {s.department ?? ""}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
+                <StaffPicker
+                  staff={staff}
+                  selectedId={staffId}
+                  onSelect={pickStaff}
+                />
               </div>
             )}
 

@@ -63,7 +63,21 @@ function GapSkeleton() {
 async function GapPanels(props: PageProps<"/manager/gap">) {
   const search = await props.searchParams;
   // Real mode lists the live roster; mock mode falls back to the seed.
-  const roster = await managerApi.listStaff();
+  const [roster, recommendations] = await Promise.all([
+    managerApi.listStaff(),
+    managerApi.listRecommendations().catch(() => []),
+  ]);
+  // Who needs looking at, not who exists. One request: a recommendation only
+  // exists where a gap was found, so the pending count ranks the row without
+  // the per-person fan-out that makes the overview slow.
+  const openByStaff = new Map<string, number>();
+  for (const r of recommendations) {
+    if (r.status !== "pending_verify") continue;
+    openByStaff.set(r.staff_id, (openByStaff.get(r.staff_id) ?? 0) + 1);
+  }
+  const switcher = roster
+    .map((m) => ({ ...m, open: openByStaff.get(m.id) ?? 0 }))
+    .sort((a, b) => b.open - a.open || a.name.localeCompare(b.name));
   const staffId =
     typeof search.staff === "string" ? search.staff : (roster[0]?.id ?? "9f2c-diego");
   // A stale or unknown id must land on the empty state, never a 500.
@@ -98,23 +112,36 @@ async function GapPanels(props: PageProps<"/manager/gap">) {
         </p>
       </div>
 
-      {/* Team switcher: one chip per roster member, scrolling horizontally
-          on narrow screens. Active staff gets the primary accent. */}
+      {/* Team switcher, ordered by who has reads waiting, scrolling
+          horizontally on narrow screens. The badge is the count, so the row
+          answers "who needs me" before it is scrolled. */}
       <nav aria-label="Team members" className="flex gap-2 overflow-x-auto pb-1">
-        {roster.map((member) => {
+        {switcher.map((member) => {
           const active = member.id === staffId;
           return (
             <Link
               key={member.id}
               href={`/manager/gap?staff=${member.id}`}
               aria-current={active ? "page" : undefined}
-              className={`shrink-0 whitespace-nowrap rounded-xl border px-3 py-1.5 text-sm font-medium transition-colors ${
+              className={`inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl border px-3 py-1.5 text-sm font-medium transition-colors ${
                 active
                   ? "border-primary bg-primary text-primary-foreground"
                   : "bg-card text-muted-foreground hover:border-primary/40 hover:text-foreground"
               }`}
             >
               {member.name.split(" ")[0]}
+              {member.open > 0 && (
+                <span
+                  title={`${member.open} waiting on your read`}
+                  className={`inline-flex min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold tabular-nums ${
+                    active
+                      ? "bg-primary-foreground/25"
+                      : "bg-[oklch(0.76_0.07_74)]/25 text-[oklch(0.42_0.07_72)]"
+                  }`}
+                >
+                  {member.open}
+                </span>
+              )}
             </Link>
           );
         })}

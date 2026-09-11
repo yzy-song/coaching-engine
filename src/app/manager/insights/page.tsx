@@ -124,6 +124,11 @@ function InsightsSkeleton() {
 
 async function InsightsPanels() {
   const insights = await managerApi.getTeamInsights();
+  // Biggest cohort first: a pattern is a pattern because of how many people
+  // are in it, so the widest one leads the page a manager triages from.
+  const patterns = [...insights.patterns].sort(
+    (a, b) => b.staff_count - a.staff_count
+  );
 
   return (
     <div className="space-y-6">
@@ -148,7 +153,7 @@ async function InsightsPanels() {
       </div>
 
       <div className="space-y-4">
-        {insights.patterns.map((pattern, i) => {
+        {patterns.map((pattern, i) => {
           const trend = readTrend(pattern);
           return (
             <Card

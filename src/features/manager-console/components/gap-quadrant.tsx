@@ -84,9 +84,13 @@ export function GapQuadrant({
 }) {
   const firstName = staffName.split(" ")[0];
   const lead = overallReading(gap.dimensions);
-  const [selected, setSelected] = useState(gap.dimensions[0]?.dimension);
-  const active =
-    gap.dimensions.find((d) => d.dimension === selected) ?? gap.dimensions[0];
+  // Biggest gap first: the row a manager should act on opens at the top, and
+  // the evidence panel follows it rather than whatever the API listed first.
+  const ordered = [...gap.dimensions].sort(
+    (a, b) => Math.abs(b.gap) - Math.abs(a.gap)
+  );
+  const [selected, setSelected] = useState(ordered[0]?.dimension);
+  const active = ordered.find((d) => d.dimension === selected) ?? ordered[0];
   const leadTone = lead ? toneFor(quadrantMeta[lead.quadrant].tone) : null;
 
   return (
@@ -114,12 +118,12 @@ export function GapQuadrant({
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Scored dimensions</CardTitle>
           <p className="text-xs text-muted-foreground">
-            One row per scored dimension, with the coaching reading as the
-            badge. Select a row for the evidence behind it.
+            One row per scored dimension, biggest gap first, with the coaching
+            reading as the badge. Select a row for the evidence behind it.
           </p>
         </CardHeader>
         <CardContent className="space-y-3">
-          {gap.dimensions.map((d) => (
+          {ordered.map((d) => (
             <button
               key={d.dimension}
               type="button"
