@@ -4,6 +4,15 @@ import { Badge } from "@/components/ui/badge";
 import { staffApi } from "@/features/staff-pwa/api/staffApi";
 import { dimensionShort } from "@/lib/format";
 
+/** Rendered per request, never prerendered.
+ *
+ * Without this Next may statically render at build time and the page freezes
+ * with whatever the database held during deployment. Everything here is live
+ * operational data, and a manager acting on a stale queue is worse than a
+ * manager waiting a moment for a fresh one.
+ */
+export const dynamic = "force-dynamic";
+
 export default async function PracticeListPage() {
   const scenarios = await staffApi.listScenarios();
   const personal = scenarios.filter((s) => s.kind === "personal");

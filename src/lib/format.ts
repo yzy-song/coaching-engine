@@ -1,5 +1,6 @@
 import type {
   BarsDimension,
+  CalibrationInfo,
   Classification,
   ObservationDimension,
   Quadrant,
@@ -138,4 +139,21 @@ export function formatRate(rate: number): string {
 
 export function formatGap(gap: number): string {
   return gap > 0 ? `+${gap.toFixed(1)}` : gap.toFixed(1);
+}
+
+/**
+ * One calibration reading from whatever shape the caller was handed.
+ *
+ * `GET /recommendations` returns `calibration` as an array of readings, one per
+ * scored dimension. The mock returns a single object. Dereferencing the array
+ * gives undefined, and the first `.replace()` on it takes the whole page down,
+ * which is exactly what happened when a manager opened "Why is the AI saying
+ * this?". Returns null rather than throwing when there is nothing to show.
+ */
+export function primaryCalibration(
+  calibration: CalibrationInfo | CalibrationInfo[] | null | undefined
+): CalibrationInfo | null {
+  if (!calibration) return null;
+  if (Array.isArray(calibration)) return calibration[0] ?? null;
+  return calibration;
 }

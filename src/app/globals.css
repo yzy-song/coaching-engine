@@ -297,3 +297,29 @@
     line-height: 1.2;
   }
 }
+
+/* Touch targets.
+
+   A phone is a first-class client here: the staff app is meant to be used on
+   one mid-shift, and the mentor's note was that this has to work on a phone as
+   well as a laptop. Several controls were 24 to 34px tall, which is fine with
+   a mouse and fiddly with a thumb.
+
+   Scoped to a coarse pointer so nothing changes for someone on a laptop, and
+   expressed as min-height so it grows buttons and block links while leaving
+   links inside a sentence alone: min-height does not apply to a non-replaced
+   inline element, which is exactly the exemption WCAG 2.5.8 makes for them. */
+@media (pointer: coarse) {
+  button,
+  summary,
+  [role="button"],
+  a[href]:not(:where(p, li, span, h1, h2, h3, h4, h5, h6) > a[href]) {
+    min-height: 40px;
+  }
+
+  /* Anything laid out as a row keeps its contents centred as it grows. */
+  button:where(.inline-flex, .flex),
+  a[href]:where(.inline-flex, .flex) {
+    align-items: center;
+  }
+}

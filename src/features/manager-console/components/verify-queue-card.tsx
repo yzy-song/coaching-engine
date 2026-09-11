@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { VerifyPanel } from "./verify-panel";
 import { WhyExplainer } from "./why-explainer";
-import { dimensionShort } from "@/lib/format";
+import { dimensionShort, primaryCalibration } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { Recommendation } from "@/lib/types";
 
@@ -38,7 +38,14 @@ export function VerifyQueueCard({
 }) {
   const pending = recommendation.status === "pending_verify";
   const panelId = `verify-panel-${recommendation.id}`;
-  const dimensionLabel = dimensionShort[recommendation.calibration.dimension];
+  // Array from the API, object from the mock. Undefined here silently
+  // labelled every queue row "undefined" rather than failing loudly.
+  const calibrationDimension = primaryCalibration(
+    recommendation.calibration
+  )?.dimension;
+  const dimensionLabel = calibrationDimension
+    ? dimensionShort[calibrationDimension]
+    : null;
 
   /** Blank space on the pending header expands in place; clicks on the detail
    * link or the chevron are left to their own behaviour. */
@@ -80,7 +87,7 @@ export function VerifyQueueCard({
                 aria-expanded={expanded}
                 aria-controls={panelId}
                 aria-label="Review this recommendation in place"
-                className="mt-1.5 shrink-0 rounded-full p-1 text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/40"
+                className="mt-0.5 inline-flex size-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/40"
               >
                 {chevron}
               </button>

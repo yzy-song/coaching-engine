@@ -18,6 +18,14 @@ import type {
 
 /** Manager Console API — mirrors LLD-B manager/ld endpoints. */
 
+// In mock mode, client components must reach the store through the route
+// handlers: importing mockDb into the browser spawns a second, disconnected
+// store whose writes the server pages and handlers never see. Server
+// components keep the in-process mockDb path (a relative fetch has no base
+// there), and real mode always goes to the gateway.
+const IN_BROWSER = typeof window !== "undefined";
+const viaHttp = (): boolean => isRealApi() || IN_BROWSER;
+
 // The mock store (db.ts, owned elsewhere) still serves the legacy
 // { computed_at, dimensions } wrapper. Both the /calibration route and this
 // client translate it to the frozen bare-array shape on the way out — keep the
@@ -63,26 +71,56 @@ async function legacyCalibrationToReadings(): Promise<CalibrationReading[]> {
 }
 
 export const managerApi = {
+  /** The team, from the database in real mode.
+   *
+   * The overview used to map over the mock seed roster, which fixed the radar
+   * at whatever that file happened to contain. A larger property then shows
+   * fifteen of its fifty staff and nothing says so. The mock store still
+   * answers when the API is off, which is what keeps offline development
+   * working. */
+  listStaff: async (): Promise<
+    Array<{ id: string; name: string; role?: string; department?: string }>
+  > => {
+    if (!isRealApi()) {
+      // The mock store has no roster of its own; the seed file is the roster.
+      const { staffMembers } = await import("@/lib/mock/seed");
+      return staffMembers;
+    }
+    // role and department are both on the wire; the old signature hid them,
+    // which pushed callers back to the mock seed for a display name.
+    const body = await http.get<{
+      staff: Array<{
+        id: string;
+        name: string;
+        role: string;
+        department?: string;
+      }>;
+    }>("/staff");
+    // Managers and L&D are not coached, so they do not belong on a radar of
+    // frontline transfer gaps.
+    return body.staff.filter((s) => s.role === "staff");
+  },
+
   listObservations: (): Promise<Observation[]> =>
-    isRealApi() ? http.get("/observations") : mockDb.listObservations(),
+    viaHttp() ? http.get("/observations") : mockDb.listObservations(),
 
   logObservation: (input: ObservationInput): Promise<ObservationResponse> =>
-    isRealApi()
+    viaHttp()
       ? http.post("/observations", input)
       : mockDb.logObservation(input),
 
   getGap: (staffId: string): Promise<TransferGap | undefined> =>
-    isRealApi()
+    viaHttp()
       ? http.get(`/staff/${staffId}/gap`)
       : mockDb.getGap(staffId),
 
   listRecommendations: (): Promise<Recommendation[]> =>
-    isRealApi()
+    viaHttp()
       ? http.get("/recommendations")
       : mockDb.listRecommendations(),
 
   getRecommendation: (id: string): Promise<Recommendation | undefined> =>
-    isRealApi()
+    viaHttp()
       ? http.get(`/recommendations/${id}`)
       : mockDb.getRecommendation(id),
 
@@ -90,7 +128,7 @@ export const managerApi = {
     id: string,
     input: VerifyInput
   ): Promise<VerifyResponse> =>
-    isRealApi()
+    viaHttp()
       ? http.post(`/recommendations/${id}/verify`, input)
       : mockDb.verifyRecommendation(id, input),
 
@@ -98,9 +136,7 @@ export const managerApi = {
    * The route handler is the canonical shape; in mock mode the legacy wrapper
    * from db.ts is mapped here so server pages see the frozen shape too. */
   getCalibration: (): Promise<CalibrationReading[]> =>
-    isRealApi()
-      ? http.get("/calibration")
-      : legacyCalibrationToReadings(),
+    viaHttp() ? http.get("/calibration") : legacyCalibrationToReadings(),
 
   /** GET /staff/{id}/scores?source=practice|floor — reads a staff member's
    * two evidence streams. Call from client components (or real-mode servers):
@@ -114,7 +150,7 @@ export const managerApi = {
     http.get(`/staff/${staffId}/scores?source=${source}`),
 
   getTeamInsights: (): Promise<TeamInsights> =>
-    isRealApi()
+    viaHttp()
       ? http.get("/insights/team")
       : mockDb.getTeamInsights(),
 };

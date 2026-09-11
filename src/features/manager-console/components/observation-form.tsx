@@ -310,22 +310,13 @@ export function ObservationForm({ staff }: { staff: StaffMember[] }) {
       .map((d) => ({ dimension: d, level: ratings[d] as number }));
     setSubmitting(true);
     try {
-      const res = await fetch("/api/v1/observations", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Idempotency-Key": crypto.randomUUID(),
-        },
-        body: JSON.stringify({
-          staff_id: staffId,
-          observed_at: new Date().toISOString(),
-          context: "Quick floor capture",
-          what_happened: note.trim(),
-          ratings: payload,
-        }),
+      await managerApi.logObservation({
+        staff_id: staffId,
+        observed_at: new Date().toISOString(),
+        context: "Quick floor capture",
+        what_happened: note.trim(),
+        ratings: payload,
       });
-      if (!res.ok) throw new Error("Failed to log observation");
-      await res.json();
       setLoggedName(selectedName);
       clearCapture();
       setSubmitting(false);

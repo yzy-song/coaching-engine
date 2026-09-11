@@ -2,9 +2,12 @@
 
 import { Fragment, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Mic, Send } from "lucide-react";
+import { Mic, Send, Volume2 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { staffApi } from "@/features/staff-pwa/api/staffApi";
 import { useVoiceInput } from "@/features/staff-pwa/lib/use-voice-input";
+import { API_BASE_URL } from "@/lib/api/client";
 import type { PracticeAttempt } from "@/lib/types";
 
 interface Message {
@@ -12,6 +15,7 @@ interface Message {
   content: string;
   mood?: string;
   turn_index: number;
+  audioId?: string;
 }
 
 const moodLabel: Record<string, string> = {
@@ -65,6 +69,7 @@ export function PracticeChat({
       content: t.guest.content,
       mood: t.guest.mood,
       turn_index: t.turn_index,
+      audioId: t.guest.audio_id,
     }))
   );
   const [input, setInput] = useState("");
@@ -115,22 +120,14 @@ export function PracticeChat({
     ]);
     setSending(true);
     try {
-      const res = await fetch(`/api/v1/attempts/${attempt.id}/turns`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Idempotency-Key": crypto.randomUUID(),
-        },
-        body: JSON.stringify({ content }),
-      });
-      if (!res.ok) throw new Error("Turn failed");
-      const turn = await res.json();
+      const turn = await staffApi.sendTurn(attempt.id, content);
       setMessages((prev) => [
         ...prev,
         {
           role: "guest",
           content: turn.guest.content,
           mood: turn.guest.mood,
+          audioId: turn.guest.audio_id,
           turn_index: turn.turn_index,
         },
       ]);
@@ -153,10 +150,7 @@ export function PracticeChat({
     completingRef.current = true;
     setCompleting(true);
     try {
-      const res = await fetch(`/api/v1/attempts/${attempt.id}/complete`, {
-        method: "POST",
-      });
-      if (!res.ok) throw new Error("Complete failed");
+      await staffApi.completeAttempt(attempt.id);
       await router.push(`/staff/results/${attempt.id}`);
     } catch {
       // navigation blocked or scoring failed — stay on the chat for a retry
@@ -225,6 +219,7 @@ export function PracticeChat({
               <GuestRow
                 content={message.content}
                 mood={message.mood ?? "neutral"}
+                audioId={message.audioId}
               />
             ) : (
               <StaffRow content={message.content} />
@@ -321,7 +316,57 @@ function GuestAvatar() {
   );
 }
 
-function GuestRow({ content, mood }: { content: string; mood: string }) {
+/** Plays one guest line. Autoplay is deliberately not used — a staff member
+ * may be on a shift floor, or on a bus — so the line is offered, never
+ * forced. When the backend could not synthesise, audioId is absent and
+ * nothing renders at all. */
+function GuestAudio({ audioId }: { audioId?: string }) {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const errorNotifiedRef = useRef(false);
+
+  if (!audioId) return null;
+
+  const reportError = () => {
+    if (errorNotifiedRef.current) return;
+    errorNotifiedRef.current = true;
+    toast.error("Couldn't play the guest voice.");
+  };
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => {
+          const el = audioRef.current;
+          if (!el) return;
+          el.pause();
+          el.currentTime = 0;
+          void el.play().catch(reportError);
+        }}
+        className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-primary"
+      >
+        <Volume2 className="size-4" />
+        hear it
+      </button>
+      <audio
+        ref={audioRef}
+        src={`${API_BASE_URL}/voice/${audioId}.mp3`}
+        preload="none"
+        onError={reportError}
+      />
+    </>
+  );
+}
+
+function GuestRow({
+  content,
+  mood,
+  audioId,
+}: {
+  content: string;
+  mood: string;
+  audioId?: string;
+}) {
   return (
     <div className="flex msg-in items-end gap-2">
       <GuestAvatar />
@@ -329,13 +374,16 @@ function GuestRow({ content, mood }: { content: string; mood: string }) {
         <div className="rounded-2xl rounded-bl-sm border bg-card px-4 py-2.5 text-sm">
           {content}
         </div>
-        <p
-          className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
-            moodTone[mood] ?? moodTone.neutral
-          }`}
-        >
-          guest · {moodLabel[mood] ?? "neutral"}
-        </p>
+        <div className="mt-1 flex items-center gap-2">
+          <p
+            className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${
+              moodTone[mood] ?? moodTone.neutral
+            }`}
+          >
+            guest · {moodLabel[mood] ?? "neutral"}
+          </p>
+          <GuestAudio audioId={audioId} />
+        </div>
       </div>
     </div>
   );

@@ -19,10 +19,10 @@ interface RadarChartProps {
   showValues?: boolean;
 }
 
-const W = 320;
-const H = 300;
-const CX = 160;
-const CY = 150;
+const W = 420;
+const H = 320;
+const CX = 210;
+const CY = 158;
 const R = 96;
 const RINGS = 5;
 

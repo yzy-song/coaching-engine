@@ -32,6 +32,12 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# ...except the example, which documents the only two variables this app reads
+# and stops Vercel offering the backend's secrets instead.
+!.env.example
+# ...and the production build config, which points the demo at the live API
+# (both values are public URLs/flags, never secrets).
+!.env.production
 
 # vercel
 .vercel

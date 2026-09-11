@@ -1659,7 +1659,9 @@ export const mockDb = {
     // 1. Record the verdict on the dimension ledger (binary agreement:
     // confirmed agrees; corrected and rejected do not — matches the real
     // calibration input of agreements / n).
-    const dimension = rec.calibration.dimension as BarsDimension;
+    const dimension = (Array.isArray(rec.calibration)
+      ? rec.calibration[0]?.dimension
+      : rec.calibration.dimension) as BarsDimension;
     const beforeEntry = ledger.get(dimension) ?? { agreements: 0, n: 0 };
     const agrees = input.verdict === "confirmed";
     const afterEntry: LedgerEntry = {

@@ -8,6 +8,15 @@ import { staffMembers } from "@/lib/mock/seed";
 import { dimensionLabels } from "@/lib/format";
 import type { BarsDimension } from "@/lib/types";
 
+/** Rendered per request, never prerendered.
+ *
+ * Without this Next may statically render at build time and the page freezes
+ * with whatever the database held during deployment. Everything here is live
+ * operational data, and a manager acting on a stale queue is worse than a
+ * manager waiting a moment for a fresh one.
+ */
+export const dynamic = "force-dynamic";
+
 export const metadata = { title: "Transfer gap — Manager Console" };
 
 const AXES = Object.keys(dimensionLabels) as BarsDimension[];

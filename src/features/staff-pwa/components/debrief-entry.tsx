@@ -133,11 +133,11 @@ export function DebriefEntry() {
           }
           className="mt-3 min-h-28"
         />
-        <div className="mt-3 flex items-center gap-2">
+        <div className="mt-3 flex flex-wrap items-center gap-2">
           <Button
             onClick={handleSubmit}
             disabled={submitting}
-            className="flex-1"
+            className="min-w-40 flex-1"
           >
             {submitting ? "Checking against your standard…" : "Get instant feedback"}
           </Button>

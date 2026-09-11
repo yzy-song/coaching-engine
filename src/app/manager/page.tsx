@@ -18,6 +18,15 @@ import { staffMembers } from "@/lib/mock/seed";
 import { dimensionLabels, dimensionShort } from "@/lib/format";
 import type { BarsDimension, CalibrationReading, TransferGap } from "@/lib/types";
 
+/** Rendered per request, never prerendered.
+ *
+ * Without this Next may statically render at build time and the page freezes
+ * with whatever the database held during deployment. Everything here is live
+ * operational data, and a manager acting on a stale queue is worse than a
+ * manager waiting a moment for a fresh one.
+ */
+export const dynamic = "force-dynamic";
+
 const AXES = Object.keys(dimensionLabels) as BarsDimension[];
 
 const MONTH_SHORT = [
@@ -34,12 +43,15 @@ function dayLabel(isoDate: string): string {
     : `${MONTH_SHORT[date.getUTCMonth()]} ${date.getUTCDate()}`;
 }
 
-/** Avatar initials come from the roster (seed) so a roster change flows
- * through the whole queue without touching this page. */
-const initialsFor = (staffId: string): string => {
-  const member = staffMembers.find((s) => s.id === staffId);
-  if (!member) return "?";
-  const fromWords = member.name
+/** Avatar initials. The server names the person when it knows them, and the
+ * roster (seed) answers when it does not, which is what mock mode relies on.
+ * Preferring the server matters once the queue is real: those rows carry
+ * database ids, and looking a uuid up in the mock roster produces "?". */
+const initialsFor = (staffId: string, staffName?: string): string => {
+  const name =
+    staffName ?? staffMembers.find((s) => s.id === staffId)?.name;
+  if (!name) return "?";
+  const fromWords = name
     .split(" ")
     .map((part) => part[0])
     .join("");
@@ -47,8 +59,10 @@ const initialsFor = (staffId: string): string => {
 };
 
 /** Queue rows lead with the person, not the metadata. */
-const nameFor = (staffId: string): string =>
-  staffMembers.find((s) => s.id === staffId)?.name ?? "Staff member";
+const nameFor = (staffId: string, staffName?: string): string =>
+  staffName ??
+  staffMembers.find((s) => s.id === staffId)?.name ??
+  "Staff member";
 
 /** Aggregate row some backends may add across dimensions (the frozen contract
  * leaves it to the reading list; when absent, take the mean of the rated
@@ -84,11 +98,16 @@ function overallCalibration(rows: CalibrationReading[]): CalibrationSummary | nu
 }
 
 export default async function ManagerOverviewPage() {
+  // Roster first: everything else is per-person, so it decides the fan-out.
+  const roster = await managerApi.listStaff();
   const [recommendations, readings, insights, gaps] = await Promise.all([
     managerApi.listRecommendations(),
     managerApi.getCalibration(),
     managerApi.getTeamInsights(),
-    Promise.all(staffMembers.map((s) => managerApi.getGap(s.id))),
+    // One request per person. Fine at this size, and the honest shape: a gap
+    // is computed per staff member under that viewer's permissions, so there
+    // is no bulk endpoint that would not quietly bypass row level security.
+    Promise.all(roster.map((s) => managerApi.getGap(s.id))),
   ]);
 
   const pending = recommendations.filter(
@@ -250,11 +269,11 @@ export default async function ManagerOverviewPage() {
               className="flex items-center gap-3 rounded-xl border p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-muted/40 hover:shadow-sm"
             >
               <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground">
-                {initialsFor(rec.staff_id)}
+                {initialsFor(rec.staff_id, rec.staff_name)}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold">
-                  {nameFor(rec.staff_id)}
+                  {nameFor(rec.staff_id, rec.staff_name)}
                 </p>
                 <p className="truncate text-sm leading-snug text-muted-foreground">
                   {rec.headline}

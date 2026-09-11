@@ -93,6 +93,9 @@ export interface Scenario {
 export interface GuestTurn {
   content: string;
   mood: "neutral" | "frustrated" | "escalating" | "calming";
+  /** Content hash of the synthesised line, when speech was available.
+   * Absent is normal: the conversation is designed to work as text. */
+  audio_id?: string;
 }
 
 export interface TurnResponse {
@@ -230,11 +233,18 @@ export interface Recommendation {
   id: string;
   status: "pending_verify" | "confirmed" | "corrected" | "rejected" | "abstained";
   staff_id: string;
-  classification: Classification;
+  /** The server resolves the display name; absent in mock mode, where the
+   * seed roster answers instead. */
+  staff_name?: string;
+  /** Null when the agent abstained: there is no classification to make. */
+  classification: Classification | null;
   headline: string;
   body: string;
   suggested_action: string;
-  calibration: CalibrationInfo;
+  /** The server sends one reading per scored dimension; the mock sends a
+   * single object. Read it through `primaryCalibration` rather than
+   * dereferencing it, or real data throws where mock data did not. */
+  calibration: CalibrationInfo | CalibrationInfo[];
   citations: Citation[];
   trace_id: string;
   created_at: string;

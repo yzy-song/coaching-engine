@@ -16,7 +16,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { BarsLevelPicker } from "@/features/manager-console/components/bars-level-picker";
-import { dimensionShort } from "@/lib/format";
+import { managerApi } from "@/features/manager-console/api/managerApi";
+import { dimensionShort, primaryCalibration } from "@/lib/format";
 import type {
   BarsDimension,
   CalibrationState,
@@ -88,6 +89,14 @@ export function VerifyPanel({
   const [response, setResponse] = useState<VerifyResponse | null>(null);
   const timerRef = useRef<number | null>(null);
 
+  // calibration is an array from the API and an object from the mock.
+  // Resolve the dimension once: it is posted in the verdict body and
+  // drives the level picker, so undefined here silently corrupts a
+  // verification rather than failing where anyone would notice.
+  const calibrationDimension =
+    primaryCalibration(recommendation.calibration)?.dimension ??
+    ("service_recovery" as BarsDimension);
+
   useEffect(() => {
     timerRef.current = window.setInterval(
       () => setSeconds((s) => s + 1),
@@ -114,26 +123,17 @@ export function VerifyPanel({
     }
     setSubmitting(true);
     try {
-      const res = await fetch(
-        `/api/v1/recommendations/${recommendation.id}/verify`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            verdict,
-            dimension_verdicts: [
-              {
-                dimension: recommendation.calibration.dimension,
-                manager_level: managerLevel ?? 2,
-              },
-            ],
-            reason,
-            seconds_to_decide: seconds,
-          }),
-        }
-      );
-      if (!res.ok) throw new Error("Verify failed");
-      const data = (await res.json()) as VerifyResponse;
+      const data = await managerApi.verifyRecommendation(recommendation.id, {
+        verdict,
+        dimension_verdicts: [
+          {
+            dimension: calibrationDimension,
+            manager_level: managerLevel ?? 2,
+          },
+        ],
+        reason,
+        seconds_to_decide: seconds,
+      });
       setResponse(data);
       onSettled?.();
       toast.success(
@@ -189,11 +189,11 @@ export function VerifyPanel({
       {verdict === "corrected" && (
         <div className="rounded-xl border p-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Your level for {dimensionShort[recommendation.calibration.dimension]} on the floor
+            Your level for {dimensionShort[calibrationDimension]} on the floor
           </p>
           <div className="mt-2">
             <BarsLevelPicker
-              dimension={recommendation.calibration.dimension}
+              dimension={calibrationDimension}
               value={managerLevel}
               onChange={setManagerLevel}
               label="Floor level"

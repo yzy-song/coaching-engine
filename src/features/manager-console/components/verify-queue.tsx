@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { CheckCircle2, FilterX } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { VerifyQueueCard } from "./verify-queue-card";
-import { dimensionShort } from "@/lib/format";
+import { dimensionShort, primaryCalibration } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { BarsDimension, Recommendation } from "@/lib/types";
 
@@ -55,7 +55,10 @@ export function VerifyQueue({ entries }: { entries: VerifyQueueEntry[] }) {
 
   const dimensionChips = useMemo(() => {
     const present = new Set(
-      items.map((entry) => entry.recommendation.calibration.dimension)
+      items.map(
+        (entry) =>
+          primaryCalibration(entry.recommendation.calibration)?.dimension
+      )
     );
     return DIMENSION_ORDER.filter((dimension) => present.has(dimension));
   }, [items]);
@@ -69,7 +72,8 @@ export function VerifyQueue({ entries }: { entries: VerifyQueueEntry[] }) {
     if (filter.kind === "dimension") {
       return items.filter(
         (entry) =>
-          entry.recommendation.calibration.dimension === filter.dimension
+          primaryCalibration(entry.recommendation.calibration)?.dimension ===
+          filter.dimension
       );
     }
     return items;

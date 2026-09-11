@@ -33,9 +33,10 @@ its mock data source, and open contract items.
 |---|---|---|---|
 | 7 | Home — debrief entry with voice input (mic permission-first, demo fallback), last practice (level words only), trust footer | `/staff` | POST `/debriefs`, GET `/debriefs/{id}` |
 | 8 | Practice list — 1 personal replay + 3 starter scenarios | `/staff/practice` | GET `/scenarios` |
-| 9 | Practice chat — scripted guest (4 turns), mood shifts, voice input with fallback, optimistic send, finish-to-score | `/staff/practice/{id}` | POST `/scenarios/{id}/attempts`; POST `/attempts/{id}/turns`; POST `/attempts/{id}/complete` |
+| 9 | Practice chat — scripted guest (4 turns in mock; the live API runs its own script), mood shifts, voice input with fallback, guest voice "hear it" button (plays `/voice/{audio_id}.mp3` when the backend attaches audio to a turn), optimistic send, finish-to-score | `/staff/practice/{id}` | POST `/scenarios/{id}/attempts`; POST `/attempts/{id}/turns`; POST `/attempts/{id}/complete` |
 | 10 | Results — level words (Finding this hard → Leading here), quoted evidence, "What earned this" | `/staff/results/{id}` | GET `/attempts/{id}` |
 | 11 | History — per-run feedback, manager-observation lock icons | `/staff/history` | (seed data) |
+| 12 | Glass box — decision trace + RLS panel (one question, three actors, three answers); real-API only, mock mode shows a notice | `/glassbox` | GET `/demo/trace/{id}`, `/demo/gate`, `/demo/rls` |
 
 ## D. Shared layer
 
@@ -69,9 +70,13 @@ observation (sequencing gate, not permission).
 ### Real-API switch
 
 `NEXT_PUBLIC_USE_REAL_API=true` + `NEXT_PUBLIC_API_BASE_URL` flips reads and
-writes to the gateway (`src/lib/api/client.ts`); every POST auto-adds
-`Idempotency-Key`. In mock mode, server pages call the mock store in-process;
-mutating client components use raw `fetch("/api/v1/…")`.
+writes to the gateway (`src/lib/api/client.ts`); every request carries
+`X-CE-Actor` (pathname-derived — `/staff/*` acts as Diego, elsewhere Marta —
+with a `localStorage.ce_actor` override) and every POST auto-adds
+`Idempotency-Key`. `.env.production` pins the live gateway for Vercel builds
+(both values are public). Mock mode: server components call the mock store
+in-process; client components route through the `/api/v1/**` route handlers
+so there is exactly one store. Data pages export `dynamic = "force-dynamic"`.
 
 ### Mock store
 
@@ -113,7 +118,10 @@ template-scored), create debrief.
    `overall_feedback`).
 5. **`ObservationInput.source` enum** in the yaml isn't in the frontend type.
 6. **Scenario engine (Nathan's lane)** — guest replies are scripted and
-   don't react to reply quality; scripts trimmed to 4 turns for the demo
-   (turn budget now derives from script length).
+   don't react to reply quality; mock scripts trimmed to 4 turns, but the
+   live API serves 8-turn scripts (live-verified `turns_remaining: 8`) —
+   flag for the demo-length decision. Live turn responses currently carry no
+   `audio_id`, so the "hear it" button stays hidden until the backend
+   attaches ElevenLabs audio (budget: ~1346 chars remaining).
 7. Minor: overview dashboard does N+1 gap calls over the roster; mock
    doesn't enforce Bearer auth.

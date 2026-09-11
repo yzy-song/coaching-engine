@@ -5,7 +5,12 @@ import { BookOpen, ChevronDown, MessageSquareQuote, Radar, ClipboardList, Target
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { citationKindLabel, classificationMeta, formatRate } from "@/lib/format";
+import {
+  citationKindLabel,
+  classificationMeta,
+  formatRate,
+  primaryCalibration,
+} from "@/lib/format";
 import type { Citation, Recommendation } from "@/lib/types";
 
 const citationIcons: Record<Citation["kind"], typeof MessageSquareQuote> = {
@@ -34,19 +39,32 @@ export function RecommendationCard({
 }) {
   const [openCitation, setOpenCitation] = useState<string | null>(null);
 
+  // Both of these are absent on real data in ways the type did not admit: an
+  // abstained recommendation has no classification, and calibration arrives as
+  // an array. Resolve them once, here, instead of at four call sites.
+  const meta = recommendation.classification
+    ? classificationMeta[recommendation.classification]
+    : null;
+  const calibration = primaryCalibration(recommendation.calibration);
+  const citations = recommendation.citations ?? [];
+
   return (
     <Card>
       <CardContent className="space-y-5 p-5 md:p-6">
         <div className="flex flex-wrap items-center gap-2">
           <Badge
             variant="outline"
-            className={classificationTone[recommendation.classification]}
+            className={
+              recommendation.classification
+                ? classificationTone[recommendation.classification]
+                : undefined
+            }
           >
-            {classificationMeta[recommendation.classification].label}
+            {meta ? meta.label : "Abstained"}
           </Badge>
-          {recommendation.citations.length > 0 && (
+          {citations.length > 0 && (
             <span className="text-xs text-muted-foreground">
-              {recommendation.citations.length} cited claims
+              {citations.length} cited claims
             </span>
           )}
           <span className="ml-auto text-xs tabular-nums text-muted-foreground">
@@ -78,7 +96,7 @@ export function RecommendationCard({
           <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             Evidence — every claim, checkable in one tap
           </p>
-          {recommendation.citations.map((citation) => {
+          {citations.map((citation) => {
             const open = openCitation === citation.source_ref;
             const Icon = citationIcons[citation.kind];
             return (
@@ -125,20 +143,24 @@ export function RecommendationCard({
           })}
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 rounded-xl bg-muted/40 p-4 text-xs">
-          <span className="text-muted-foreground">
-            AI agreement on {recommendation.calibration.dimension.replace("_", " ")}:
-          </span>
-          <span className="text-sm font-bold">
-            {formatRate(recommendation.calibration.agreement_rate)}
-          </span>
-          <span className="text-muted-foreground">
-            (n = {recommendation.calibration.sample_size})
-          </span>
-          <p className="w-full text-muted-foreground">
-            {recommendation.calibration.advice}
-          </p>
-        </div>
+        {calibration && (
+          <div className="flex flex-wrap items-center gap-3 rounded-xl bg-muted/40 p-4 text-xs">
+            <span className="text-muted-foreground">
+              AI agreement on {calibration.dimension.replace("_", " ")}:
+            </span>
+            <span className="text-sm font-bold">
+              {formatRate(calibration.agreement_rate)}
+            </span>
+            <span className="text-muted-foreground">
+              (n = {calibration.sample_size})
+            </span>
+            {calibration.advice && (
+              <p className="w-full text-muted-foreground">
+                {calibration.advice}
+              </p>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
