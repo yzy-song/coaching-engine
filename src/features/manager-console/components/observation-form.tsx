@@ -10,7 +10,6 @@ import { managerApi } from "@/features/manager-console/api/managerApi";
 import { dimensionShort, observationDimensionLines } from "@/lib/format";
 import type {
   ObservationDimension,
-  StaffMember,
   StaffScoreRow,
 } from "@/lib/types";
 
@@ -102,7 +101,16 @@ const ADVANCE_MS = 220;
 
 type RatingsState = Partial<Record<ObservationDimension, number>>;
 
-export function ObservationForm({ staff }: { staff: StaffMember[] }) {
+export function ObservationForm({
+  staff,
+}: {
+  staff: Array<{
+    id: string;
+    name: string;
+    role?: string;
+    department?: string;
+  }>;
+}) {
   const [staffId, setStaffId] = useState(staff[0]?.id ?? "");
   const [step, setStep] = useState<StepId>("who");
   const [scope, setScope] = useState<ScopeKind | null>(null);
@@ -359,7 +367,7 @@ export function ObservationForm({ staff }: { staff: StaffMember[] }) {
                   </span>
                   {member && (
                     <span className="block text-xs leading-tight text-primary-foreground/85">
-                      {member.role}
+                      {member.role ?? "Frontline"}
                     </span>
                   )}
                 </span>
@@ -405,7 +413,7 @@ export function ObservationForm({ staff }: { staff: StaffMember[] }) {
                               : "text-muted-foreground"
                           }`}
                         >
-                          {s.role} · {s.department}
+                          {s.role ?? "Frontline"} · {s.department ?? ""}
                         </span>
                       </button>
                     );

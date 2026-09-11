@@ -25,9 +25,20 @@ export default async function GapPage(
   props: PageProps<"/manager/gap">
 ) {
   const search = await props.searchParams;
-  const staffId = typeof search.staff === "string" ? search.staff : "9f2c-diego";
-  const gap = await managerApi.getGap(staffId);
-  const staff = staffMembers.find((s) => s.id === staffId);
+  // Real mode lists the live roster; mock mode falls back to the seed.
+  const roster = await managerApi.listStaff();
+  const staffId =
+    typeof search.staff === "string" ? search.staff : (roster[0]?.id ?? "9f2c-diego");
+  // A stale or unknown id must land on the empty state, never a 500.
+  let gap: Awaited<ReturnType<typeof managerApi.getGap>> = undefined;
+  try {
+    gap = await managerApi.getGap(staffId);
+  } catch {
+    gap = undefined;
+  }
+  const staff =
+    roster.find((s) => s.id === staffId) ??
+    staffMembers.find((s) => s.id === staffId);
 
   const practiceValues: Partial<Record<BarsDimension, number | null>> = {};
   const floorValues: Partial<Record<BarsDimension, number | null>> = {};
@@ -53,7 +64,7 @@ export default async function GapPage(
       {/* Team switcher: one chip per roster member, scrolling horizontally
           on narrow screens. Active staff gets the primary accent. */}
       <nav aria-label="Team members" className="flex gap-2 overflow-x-auto pb-1">
-        {staffMembers.map((member) => {
+        {roster.map((member) => {
           const active = member.id === staffId;
           return (
             <Link

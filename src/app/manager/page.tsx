@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import {
   ArrowRight,
   ClipboardCheck,
@@ -97,7 +98,74 @@ function overallCalibration(rows: CalibrationReading[]): CalibrationSummary | nu
   };
 }
 
-export default async function ManagerOverviewPage() {
+export default function ManagerOverviewPage() {
+  return (
+    <div className="space-y-6">
+      <div className="msg-in flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Afternoon, Marta
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Recommendations are waiting on your read. Nothing routes anywhere
+            until you verify.
+          </p>
+        </div>
+        <Button nativeButton={false} render={<Link href="/manager/observe" />}>
+          <ClipboardCheck className="size-4" />
+          Log an observation
+        </Button>
+      </div>
+
+      {/* The data panels stream in behind a skeleton so the page shell paints
+          immediately — the live roster fan-out can take seconds on a cold
+          backend, and a blank screen reads as broken. */}
+      <Suspense fallback={<OverviewSkeleton />}>
+        <OverviewPanels />
+      </Suspense>
+
+      <p className="fade-up [animation-delay:600ms] rounded-xl border border-dashed border-primary/25 bg-primary/5 p-4 text-xs leading-relaxed text-muted-foreground">
+        <span className="font-semibold text-foreground">How it works:</span>{" "}
+        your observation and the staff member's practice scores are two
+        independent streams. The AI combines them into a transfer-gap reading,
+        drafts a recommendation where every claim cites its source, and holds
+        it here until you confirm, correct or reject it. Every verdict trains
+        the calibration number shown above — that is the loop the system
+        learns from. Simulations only prove what staff can do in practice —
+        Cornell's own AI-training research stops there. The floor is where it
+        counts.
+      </p>
+    </div>
+  );
+}
+
+function OverviewSkeleton() {
+  return (
+    <div className="grid gap-6 lg:grid-cols-3">
+      <Card className="lg:col-span-2">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Team transfer-gap radar</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-72 animate-pulse rounded-xl bg-muted/40" />
+        </CardContent>
+      </Card>
+      <div className="flex flex-col gap-4">
+        <Card>
+          <CardContent className="h-24 animate-pulse rounded-xl bg-muted/40" />
+        </Card>
+        <Card>
+          <CardContent className="h-32 animate-pulse rounded-xl bg-muted/40" />
+        </Card>
+        <Card>
+          <CardContent className="h-24 animate-pulse rounded-xl bg-muted/40" />
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+async function OverviewPanels() {
   // Roster first: everything else is per-person, so it decides the fan-out.
   const roster = await managerApi.listStaff();
   const [recommendations, readings, insights, gaps] = await Promise.all([
@@ -144,22 +212,6 @@ export default async function ManagerOverviewPage() {
 
   return (
     <div className="space-y-6">
-      <div className="msg-in flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Afternoon, Marta
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {pending.length} recommendations are waiting on your read. Nothing
-            routes anywhere until you verify.
-          </p>
-        </div>
-        <Button nativeButton={false} render={<Link href="/manager/observe" />}>
-          <ClipboardCheck className="size-4" />
-          Log an observation
-        </Button>
-      </div>
-
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="surface-glow fade-up lg:col-span-2">
           <CardHeader className="pb-2">
@@ -284,18 +336,6 @@ export default async function ManagerOverviewPage() {
           ))}
         </CardContent>
       </Card>
-
-      <p className="fade-up [animation-delay:600ms] rounded-xl border border-dashed border-primary/25 bg-primary/5 p-4 text-xs leading-relaxed text-muted-foreground">
-        <span className="font-semibold text-foreground">How it works:</span>{" "}
-        your observation and the staff member's practice scores are two
-        independent streams. The AI combines them into a transfer-gap reading,
-        drafts a recommendation where every claim cites its source, and holds
-        it here until you confirm, correct or reject it. Every verdict trains
-        the calibration number shown above — that is the loop the system
-        learns from. Simulations only prove what staff can do in practice —
-        Cornell's own AI-training research stops there. The floor is where it
-        counts.
-      </p>
     </div>
   );
 }

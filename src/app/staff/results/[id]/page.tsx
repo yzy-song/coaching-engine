@@ -22,7 +22,14 @@ export default async function ResultsPage(
   props: PageProps<"/staff/results/[id]">
 ) {
   const { id } = await props.params;
-  const attempt = await staffApi.getAttempt(id);
+  // A stale or unknown attempt id (e.g. a seeded link opened against the
+  // live API) must land on the friendly empty state, never a 500.
+  let attempt: Awaited<ReturnType<typeof staffApi.getAttempt>> = undefined;
+  try {
+    attempt = await staffApi.getAttempt(id);
+  } catch {
+    attempt = undefined;
+  }
   const result =
     attempt?.result ?? (id === "8a4e-diego" ? diegoScoreResult : null);
   const scenarioId = attempt?.scenario_id ?? result?.scenario_id ?? null;
