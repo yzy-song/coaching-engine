@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowLeft, Repeat2 } from "lucide-react";
+import { ArrowLeft, Home } from "lucide-react";
 import { parentOf } from "@/lib/nav";
 
 /**
@@ -12,7 +12,7 @@ import { parentOf } from "@/lib/nav";
  * for the other:
  *
  *   left   go up one level, labelled with the destination
- *   right  leave this role entirely and pick another
+ *   right  jump back to the landing page
  *
  * The second one is the gap that mattered. Both apps had internal navigation
  * and no exit: once you opened the staff phone you could reach three tabs and
@@ -25,17 +25,17 @@ import { parentOf } from "@/lib/nav";
  */
 export function ScreenNav({
   className = "",
-  showSwitch = true,
+  showHome = true,
 }: {
   className?: string;
-  /** The landing page is where roles are chosen, so it does not offer to. */
-  showSwitch?: boolean;
+  /** The landing page needs no exit to itself. */
+  showHome?: boolean;
 }) {
   const pathname = usePathname();
   const back = parentOf(pathname);
 
   // Nothing to render at all would collapse the spacing the pages below expect.
-  if (!back && !showSwitch) return null;
+  if (!back && !showHome) return null;
 
   return (
     <div className={`mb-5 flex items-center justify-between gap-3 ${className}`}>
@@ -51,13 +51,13 @@ export function ScreenNav({
         <span />
       )}
 
-      {showSwitch && (
+      {showHome && (
         <Link
           href="/"
           className="-mr-2 inline-flex min-h-10 items-center gap-1.5 rounded-lg px-2 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
         >
-          <Repeat2 className="size-3.5" aria-hidden />
-          Switch role
+          <Home className="size-3.5" aria-hidden />
+          Home
         </Link>
       )}
     </div>
