@@ -7,9 +7,29 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { VerifyPanel } from "./verify-panel";
 import { WhyExplainer } from "./why-explainer";
-import { dimensionShort, primaryCalibration } from "@/lib/format";
+import { classificationMeta, dimensionShort, primaryCalibration } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { Recommendation } from "@/lib/types";
+
+/** "2d" or "5h". A queue with no age has no order to work in. */
+function ageLabel(iso: string | undefined): string {
+  if (!iso) return "";
+  const ms = Date.now() - new Date(iso).getTime();
+  if (Number.isNaN(ms) || ms < 0) return "";
+  const hours = Math.floor(ms / 3_600_000);
+  if (hours < 1) return "now";
+  if (hours < 24) return `${hours}h`;
+  return `${Math.floor(hours / 24)}d`;
+}
+
+/** Muted, not loud. The classification steers what a manager does about the
+ * read, so it earns a place in the row — but loud coloured chips down a page
+ * are noise rather than signal. */
+const TYPE_TONE: Record<string, string> = {
+  behavioural: "text-[oklch(0.45_0.07_72)]",
+  process: "text-[oklch(0.43_0.06_115)]",
+  policy: "text-[oklch(0.45_0.08_30)]",
+};
 
 /**
  * One row of the /manager/verify queue.
@@ -46,6 +66,10 @@ export function VerifyQueueCard({
   const dimensionLabel = calibrationDimension
     ? dimensionShort[calibrationDimension]
     : null;
+  const typeLabel = recommendation.classification
+    ? classificationMeta[recommendation.classification]?.label
+    : null;
+  const age = ageLabel(recommendation.created_at);
 
   /** Blank space on the pending header expands in place; clicks on the detail
    * link or the chevron are left to their own behaviour. */
@@ -99,9 +123,25 @@ export function VerifyQueueCard({
                       New
                     </Badge>
                   )}
-                  <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-                    {dimensionLabel}
-                  </span>
+                  {typeLabel ? (
+                    <span
+                      className={`rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium ${
+                        TYPE_TONE[recommendation.classification ?? ""] ??
+                        "text-muted-foreground"
+                      }`}
+                    >
+                      {typeLabel}
+                    </span>
+                  ) : (
+                    <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+                      {dimensionLabel}
+                    </span>
+                  )}
+                  {age && (
+                    <span className="text-xs font-medium text-muted-foreground">
+                      {age}
+                    </span>
+                  )}
                 </div>
                 <Link
                   href={`/manager/verify/${recommendation.id}`}
@@ -162,6 +202,11 @@ export function VerifyQueueCard({
               <Badge variant="secondary" className="mt-1.5">
                 Abstained
               </Badge>
+              {age && (
+                <span className="mt-1.5 text-xs font-medium text-muted-foreground">
+                  {age}
+                </span>
+              )}
               <span className="mt-1.5 shrink-0">{chevron}</span>
             </button>
 
