@@ -18,11 +18,9 @@ import { Badge } from "@/components/ui/badge";
 import { Reveal } from "@/components/reveal";
 import { ScrollProgress } from "@/components/scroll-progress";
 import {
-  currentManager,
   diegoDebrief,
   diegoObservation,
   diegoScoreResult,
-  staffMembers,
 } from "@/lib/mock/seed";
 
 const MONTH_SHORT = [
@@ -39,7 +37,7 @@ function dayLabel(isoDate: string): string {
 }
 
 // The three citation chips show real seeded anchors, not invented ones: the
-// SOP chunk behind Diego's debrief, his quoted practice turn, and Marta's
+// SOP chunk behind the staff debrief, the quoted practice turn, and the
 // 29 August observation of the check-in.
 const citationExamples = [
   {
@@ -48,11 +46,11 @@ const citationExamples = [
   },
   {
     icon: MessageSquareQuote,
-    text: `Practice · ${staffMembers.find((s) => s.id === "9f2c-diego")?.name ?? "Diego"}'s turn ${diegoScoreResult.evidence[0]?.turn_index ?? 5}`,
+    text: `Practice · a front desk agent's turn ${diegoScoreResult.evidence[0]?.turn_index ?? 5}`,
   },
   {
     icon: Eye,
-    text: `Observation · ${dayLabel(diegoObservation.observed_at)}, ${currentManager.name}`,
+    text: `Observation · ${dayLabel(diegoObservation.observed_at)}, by the duty manager`,
   },
 ];
 
@@ -95,7 +93,7 @@ export default function LandingPage() {
           <div className="hero-enter" style={{ animationDelay: "0ms" }}>
             <Badge className="bg-accent text-accent-foreground">
               <Sparkles className="size-3" />
-              Demo build — seeded with the Diego story
+              Demo build — seeded with a live shift story
             </Badge>
           </div>
           <h1
@@ -126,7 +124,7 @@ export default function LandingPage() {
               className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5 sm:w-auto"
             >
               <MonitorSmartphone className="size-4" />
-              Open as Marta, Duty Manager
+              Open as the Duty Manager
               <ArrowRight className="size-4" />
             </Link>
             <Link
@@ -134,7 +132,7 @@ export default function LandingPage() {
               className="inline-flex w-full items-center justify-center gap-2 rounded-xl border bg-card px-6 py-3 text-sm font-semibold transition-colors hover:border-primary/40 hover:bg-muted/40 sm:w-auto"
             >
               <Smartphone className="size-4" />
-              Open as Diego, Front Desk
+              Open as the Front Desk Agent
             </Link>
           </div>
           <div
@@ -241,8 +239,8 @@ export default function LandingPage() {
                       </p>
                     </div>
                     <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
-                      Diego's scored scenarios — his own words, rated on the
-                      BARS framework.
+                      Scored practice scenarios — a staff member's own
+                      words, rated on the BARS framework.
                     </p>
                   </div>
                   <div className="rounded-xl border bg-muted/30 p-4">
@@ -251,8 +249,8 @@ export default function LandingPage() {
                       <p className="text-xs font-semibold">Floor stream</p>
                     </div>
                     <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
-                      Marta's 20-second observation — what she personally saw
-                      on shift.
+                      The manager's 20-second observation — what they
+                      personally saw on shift.
                     </p>
                   </div>
                 </div>
@@ -372,7 +370,7 @@ export default function LandingPage() {
                   href="/staff"
                   className="inline-flex w-full items-center justify-center gap-2 rounded-xl border bg-background/40 px-6 py-3 text-sm font-semibold transition-colors hover:bg-muted/40 sm:w-auto"
                 >
-                  Or live a shift as Diego
+                  Or live a shift on the front desk
                 </Link>
               </div>
               <p className="mt-5 text-xs text-muted-foreground">
