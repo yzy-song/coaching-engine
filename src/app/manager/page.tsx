@@ -167,16 +167,23 @@ function OverviewSkeleton() {
 
 async function OverviewPanels() {
   // Roster first: everything else is per-person, so it decides the fan-out.
-  const roster = await managerApi.listStaff();
-  const [recommendations, readings, insights, gaps] = await Promise.all([
-    managerApi.listRecommendations(),
-    managerApi.getCalibration(),
-    managerApi.getTeamInsights(),
-    // One request per person. Fine at this size, and the honest shape: a gap
-    // is computed per staff member under that viewer's permissions, so there
-    // is no bulk endpoint that would not quietly bypass row level security.
-    Promise.all(roster.map((s) => managerApi.getGap(s.id))),
-  ]);
+  const [roster, recommendations, readings, insights, observations] =
+    await Promise.all([
+      managerApi.listStaff(),
+      managerApi.listRecommendations(),
+      managerApi.getCalibration(),
+      managerApi.getTeamInsights(),
+      managerApi.listObservations().catch(() => []),
+    ]);
+  // A transfer gap only exists once the manager has observed the person, so
+  // the fan-out skips everyone without an observation — 46 staff become the
+  // handful the radar can actually speak for, and the page gets fast.
+  const observedIds = new Set(observations.map((o) => o.staff_id));
+  const gaps = await Promise.all(
+    roster
+      .filter((s) => observedIds.has(s.id))
+      .map((s) => managerApi.getGap(s.id))
+  );
 
   const pending = recommendations.filter(
     (r) => r.status === "pending_verify"
