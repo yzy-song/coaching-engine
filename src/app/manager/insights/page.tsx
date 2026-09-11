@@ -1,6 +1,8 @@
+import { Suspense } from "react";
 import { ArrowDownRight, ArrowUpRight, EyeOff, ShieldCheck, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { managerApi } from "@/features/manager-console/api/managerApi";
 import { classificationMeta, dimensionShort } from "@/lib/format";
 import type { EscalationRoute, TeamPattern } from "@/lib/types";
@@ -78,7 +80,49 @@ function readTrend(pattern: TeamPattern): TrendReading | null {
   return null;
 }
 
-export default async function InsightsPage() {
+/** Sync shell: paints immediately; every panel below needs the fetched
+ * insights (the header subtitle interpolates the k-anonymity threshold), so
+ * they stream in together behind the skeleton. */
+export default function InsightsPage() {
+  return (
+    <div className="space-y-6">
+      <Suspense fallback={<InsightsSkeleton />}>
+        <InsightsPanels />
+      </Suspense>
+    </div>
+  );
+}
+
+/** Mirrors the streamed page: title + subtitle bars, the window/threshold
+ * chips, then the pattern cards. */
+function InsightsSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <Skeleton className="h-8 w-56" />
+        <Skeleton className="h-4 w-full max-w-xl" />
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Skeleton className="h-7 w-56 rounded-full" />
+        <Skeleton className="h-7 w-52 rounded-full" />
+      </div>
+      <div className="space-y-4">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Card key={i}>
+            <CardContent className="space-y-4">
+              <Skeleton className="h-20 rounded-2xl" />
+              <Skeleton className="h-5 w-2/5" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/5" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+async function InsightsPanels() {
   const insights = await managerApi.getTeamInsights();
 
   return (

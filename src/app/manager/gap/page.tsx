@@ -1,9 +1,11 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { GapQuadrant } from "@/features/manager-console/components/gap-quadrant";
 import { LastScoresPanel } from "@/features/manager-console/components/last-scores-panel";
 import { managerApi } from "@/features/manager-console/api/managerApi";
 import { RadarChart } from "@/components/ui/radar-chart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { staffMembers } from "@/lib/mock/seed";
 import { dimensionLabels } from "@/lib/format";
 import type { BarsDimension } from "@/lib/types";
@@ -21,9 +23,44 @@ export const metadata = { title: "Transfer gap — Manager Console" };
 
 const AXES = Object.keys(dimensionLabels) as BarsDimension[];
 
-export default async function GapPage(
-  props: PageProps<"/manager/gap">
-) {
+/** Sync shell: paints immediately. The heading carries the staff name and
+ * the chip row needs the live roster, so both stream in with the panels
+ * behind the skeleton instead of blocking first paint. */
+export default function GapPage(props: PageProps<"/manager/gap">) {
+  return (
+    <div className="space-y-6">
+      <Suspense fallback={<GapSkeleton />}>
+        <GapPanels {...props} />
+      </Suspense>
+    </div>
+  );
+}
+
+/** Mirrors what streams in: the title (staff name), the subtitle, the
+ * roster chip row, then the reading card. */
+function GapSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <Skeleton className="h-8 w-72" />
+        <Skeleton className="h-4 w-full max-w-lg" />
+      </div>
+      <div className="flex gap-2 overflow-hidden pb-1">
+        {Array.from({ length: 7 }).map((_, i) => (
+          <Skeleton key={i} className="h-8 w-20 shrink-0 rounded-xl" />
+        ))}
+      </div>
+      <Card>
+        <CardContent className="space-y-4">
+          <Skeleton className="h-5 w-2/5" />
+          <Skeleton className="h-64 w-full rounded-xl" />
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+async function GapPanels(props: PageProps<"/manager/gap">) {
   const search = await props.searchParams;
   // Real mode lists the live roster; mock mode falls back to the seed.
   const roster = await managerApi.listStaff();
